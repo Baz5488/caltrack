@@ -1,0 +1,238 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Personal Calorie Tracker</title>
+<style>
+:root{font-family:system-ui;color:#20302a;background:#f3f6f4}*{box-sizing:border-box}body{margin:0}header{background:#17452f;color:white;padding:20px}main{max-width:1050px;margin:20px auto;padding:0 14px;display:grid;gap:14px}.panel,.metric{background:white;border:1px solid #dce6df;border-radius:13px;padding:15px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.muted,small{color:#64756b}.big{font-size:26px;font-weight:750}.bar{height:8px;background:#e6eee8;border-radius:9px;overflow:hidden}.bar i{display:block;height:100%;background:#16834a}h2{font-size:18px;margin:0 0 12px}.row{display:flex;gap:9px;align-items:end;flex-wrap:wrap}.field{flex:1;min-width:120px}label{display:block;font-size:12px;color:#607166;margin-bottom:4px}input,select{width:100%;padding:9px;border:1px solid #cbd8cf;border-radius:8px;background:white;font:inherit}button,.filelabel{padding:9px 12px;border:0;border-radius:8px;background:#17633c;color:white;font:inherit;cursor:pointer}.secondary{background:#e8efea;color:#244333}.danger{background:#fff0f0;color:#a11}.scroll{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}td,th{text-align:left;padding:8px;border-bottom:1px solid #e6ece8}th{color:#637369}.right{text-align:right;white-space:nowrap}.tiny{font-size:11px;color:#68796f}.meal{margin-top:12px}.formgrid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:8px}.hidden{display:none!important}.notice{font-size:12px;background:#fff8e7;padding:10px;border-radius:8px;color:#70551b}@media(max-width:650px){.stats{grid-template-columns:1fr}.formgrid{grid-template-columns:1fr 1fr}.formgrid .wide{grid-column:span 2}}
+
+/* Smartphone-first vertical layout */
+@media (max-width: 700px) {
+  header { padding: 16px; }
+  header h1 { font-size: 20px; }
+  main { margin: 12px auto; padding: 0 10px 28px; gap: 11px; }
+  .stats { grid-template-columns: 1fr; gap: 8px; }
+  .metric { padding: 12px 14px; }
+  .big { font-size: 23px; }
+  .panel { padding: 13px; border-radius: 11px; }
+  .row { display: flex; flex-direction: column; align-items: stretch; gap: 9px; }
+  .row > .field, .row > button, .row > .filelabel { width: 100%; max-width: none !important; }
+  .row > h2 { margin-bottom: 0; }
+  .row[style*="justify-content:space-between"] { align-items: stretch; }
+  .formgrid { grid-template-columns: 1fr; }
+  .formgrid .wide { grid-column: auto; }
+  input, select { min-height: 42px; font-size: 16px; }
+  button, .filelabel { min-height: 42px; text-align: center; }
+  .scroll { margin-left: -2px; margin-right: -2px; }
+  table { min-width: 510px; }
+  .meal table { min-width: 430px; }
+  .notice { line-height: 1.5; }
+  .tiny { line-height: 1.45; }
+  #editor .row { flex-direction: column; }
+  #editor .row button { width: 100%; }
+}
+@media (min-width: 701px) {
+  .stats { grid-template-columns: repeat(3, 1fr); }
+}
+#scanVideo{width:100%}#scannerPanel .row{align-items:end}@media(max-width:700px){#scannerPanel .row{flex-direction:column;align-items:stretch}#scannerPanel .row button{width:100%}}.chartgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.chartbox{min-width:0;border:1px solid #e2eae4;border-radius:10px;padding:12px;background:#fbfdfb}.chartbox h3{font-size:15px;margin:0 0 8px}.chartbox svg{display:block;width:100%;height:auto;overflow:visible}.chartlegend{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;font-size:12px;color:#607166;margin-top:4px}.chartlegend span{display:inline-flex;align-items:center;gap:6px}.legendbar{display:inline-block;width:12px;height:12px;border-radius:3px}.callegend{background:#258653}.prolegend{background:#287f9d}.legendline{display:inline-block;width:18px;border-top:2px dashed #b47a24}@media(max-width:700px){.chartgrid{grid-template-columns:1fr}.chartbox{padding:10px}}
+
+</style></head><body>
+<header><h1 style="margin:0">Personal Calorie Tracker</h1><div>Your everyday foods · calories · protein · nutrition history</div></header>
+<main>
+<section class="stats">
+<div class="metric"><small>CALORIES TODAY</small><div class="big" id="cal">0 / 1,500 kcal</div><div class="bar"><i id="calbar"></i></div><small id="calleft">1,500 kcal remaining</small></div>
+<div class="metric"><small>PROTEIN TODAY</small><div class="big" id="pro">0 / 100 g</div><div class="bar"><i id="probar"></i></div><small id="proleft">100 g to target</small></div>
+<div class="metric"><small>CARBS / FAT</small><div class="big" id="macros">0 g / 0 g</div><small>Estimated logged totals</small></div>
+</section>
+<section class="panel"><div class="row" style="justify-content:space-between"><h2>Daily food log</h2><div class="field" style="max-width:180px"><label>Date</label><input id="date" type="date"></div></div>
+<div class="row" style="margin:10px 0"><button id="scanOpen" type="button">▦ Scan product barcode</button><span class="tiny">Scan EAN / JAN barcodes, or enter the number manually.</span></div>
+<div id="scannerPanel" class="hidden" style="border:1px solid #dce6df;background:#f7faf8;border-radius:10px;padding:12px;margin:10px 0">
+  <div class="row" style="justify-content:space-between"><b>Barcode lookup</b><button id="scanClose" class="secondary" type="button">Close</button></div>
+  <video id="scanVideo" playsinline muted style="display:none;width:100%;max-height:260px;object-fit:cover;border-radius:8px;background:#17251d;margin:8px 0"></video>
+  <p id="scanStatus" class="tiny">Start the camera or enter the barcode printed below the product's bars.</p>
+  <div class="row"><div class="field"><label>Barcode number (JAN / EAN / UPC)</label><input id="barcodeInput" inputmode="numeric" autocomplete="off" placeholder="e.g. 4901234567890"></div><button id="barcodeLookup" type="button">Look up</button></div>
+  <p class="tiny">Product details are retrieved from Open Food Facts. Japanese product coverage varies; always compare the returned nutrition values with the package label.</p>
+</div>
+<div class="row"><div class="field"><label>Search food / brand</label><input id="search" placeholder="e.g. salmon, Meiji"></div><div class="field"><label>Meal</label><select id="meal"><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option></select></div><div class="field" style="flex:2"><label>Food</label><select id="food"></select></div><div class="field"><label>Servings</label><input id="qty" type="number" min=".1" step=".1" value="1"></div><button id="add">Add food</button></div>
+<p class="notice">Serving multiplier: 0.5 = half a serving; for 10 g nuts when the database serving is 30 g, enter 0.33.</p><div id="log"></div></section>
+<section class="panel" id="weeklyProgress"><h2>Weekly progress · last 7 days</h2><p class="tiny">The week ends on the date selected above. Dashed line = daily target; bars = actual intake. Days with no entries are shown as zero.</p><div class="chartgrid"><div class="chartbox"><h3>Calories (kcal)</h3><div id="calChart"></div><div class="chartlegend"><span><i class="legendbar callegend"></i>Actual</span><span><i class="legendline"></i>Target</span></div></div><div class="chartbox"><h3>Protein (g)</h3><div id="proChart"></div><div class="chartlegend"><span><i class="legendbar prolegend"></i>Actual</span><span><i class="legendline"></i>Target</span></div></div></div></section>
+<section class="panel"><div class="row" style="justify-content:space-between"><h2>Food database</h2><div class="row"><button class="secondary" id="new">+ Add food</button><button class="secondary" id="csv">Export CSV</button><button class="secondary" id="backup">Backup JSON</button><label class="filelabel">Import JSON<input id="import" type="file" accept=".json" hidden></label></div></div>
+<div id="editor" class="hidden" style="background:#f6faf7;padding:12px;border-radius:9px"><h3 id="editTitle">Add food</h3><div class="formgrid">
+<div class="wide"><label>Food name</label><input id="name"></div><div><label>Brand</label><input id="brand" placeholder="Generic / Meiji"></div><div><label>Category</label><select id="category"><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option><option>Other</option></select></div>
+<div><label>Serving amount</label><input id="amount" type="number" value="100"></div><div><label>Unit</label><select id="unit"><option>g</option><option>ml</option><option>piece</option><option>slice</option><option>tbsp</option><option>tsp</option><option>cup</option></select></div><div><label>Calories kcal</label><input id="kcal" type="number" step=".1"></div><div><label>Protein g</label><input id="protein" type="number" step=".1"></div><div><label>Carbs g</label><input id="carbs" type="number" step=".1"></div><div><label>Fat g</label><input id="fat" type="number" step=".1"></div></div><div class="row" style="justify-content:flex-end;margin-top:10px"><button class="secondary" id="cancel">Cancel</button><button id="save">Save food</button></div></div>
+<div class="row" style="margin-top:12px"><div class="field"><label>Filter database</label><input id="dbsearch" placeholder="Food or brand"></div><div class="field"><label>Category</label><select id="dbcat"><option value="">All</option><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option><option>Other</option></select></div></div><div class="scroll"><table><thead><tr><th>Food / brand</th><th>Serving</th><th class="right">kcal</th><th class="right">Protein</th><th></th></tr></thead><tbody id="foods"></tbody></table></div><p class="tiny">Initial nutrition values are estimates. Edit entries using the package label for your actual Japanese products.</p></section>
+<section class="panel"><h2>Targets & history</h2><div class="row"><div class="field"><label>Daily calorie target</label><input id="targetCal" type="number" value="1500"></div><div class="field"><label>Daily protein target</label><input id="targetPro" type="number" value="100"></div><button id="targets">Save targets</button></div><h3>Last 7 logged days</h3><div class="scroll"><table><thead><tr><th>Date</th><th class="right">Calories</th><th class="right">Protein</th><th class="right">Carbs</th><th class="right">Fat</th></tr></thead><tbody id="history"></tbody></table></div></section>
+<p class="tiny">Saved in this browser on this device. Use Backup JSON to transfer your data; automatic cloud sync is not included in this first version.</p>
+</main>
+<script>
+const KEY='personal_calorie_tracker_v1';
+const seed=[
+['Greek yogurt','Generic','Breakfast',150,'g',100,15,5,3],['Honey','Generic','Breakfast',1,'tsp',21,0,5.7,0],['Blueberries','Generic','Breakfast',1,'tbsp',5,.1,1.2,0],['L-citrulline','Generic supplement','Breakfast',5,'g',0,0,0,0],['Whey protein powder','Generic','Breakfast',7,'g',28,5.5,.5,.4],['Pumpkin/sunflower/goji mix','Generic','Breakfast',10,'g',50,2,3,3.8],['Whole wheat bread','Generic','Breakfast',1,'slice',80,4,14,1.2],['Peanut butter','Generic','Breakfast',1,'tbsp',95,4,3.5,8],['Hard-boiled egg','Generic','Breakfast',1,'piece',78,6.3,.6,5.3],['Broccoli','Generic','Other',70,'g',24,2,4.6,.3],['Dried prune','Generic','Snack',1,'piece',23,.2,6.1,0],['Red apple with skin','Generic','Snack',.5,'piece',47,.2,12.5,.2],
+['White rice, cooked','Generic Japanese short-grain','Lunch',200,'g',312,5,71,.6],['Brown rice, cooked','Generic','Lunch',200,'g',304,5.5,64,2.2],['Fried egg','Generic','Lunch',1,'piece',90,6,.5,7],['Fried tempeh','Generic','Lunch',30,'g',60,6,3,3.5],['Grilled salmon','Generic','Lunch',120,'g',250,26,0,16],['Grilled mackerel','Generic','Lunch',120,'g',245,25,0,17],['Boiled shrimp','Generic','Lunch',20,'g',20,5,0,.1],['Romaine lettuce + tomato','Generic','Lunch',1,'cup',20,1,4,.2],
+['86% cacao dark chocolate','Meiji (estimate)','Snack',2,'piece',60,1,4,5],['Mixed nuts','Generic','Snack',30,'g',175,5.5,5,15.5],['Banana','Generic','Snack',1,'piece',105,1.3,27,.4],['Black coffee','Generic','Snack',300,'ml',2,.3,0,0]
+];
+const fresh=()=>({foods:seed.map((a,i)=>({id:'f'+i,name:a[0],brand:a[1],category:a[2],amount:a[3],unit:a[4],kcal:a[5],protein:a[6],carbs:a[7],fat:a[8]})),logs:{},targets:{calories:1500,protein:100}});
+let s;try{s=JSON.parse(localStorage.getItem(KEY))||fresh()}catch(e){s=fresh()}if(!s.foods||!s.logs)s=fresh();
+const $=x=>document.getElementById(x),num=x=>Number(x)||0,fmt=x=>Math.round(x*10)/10,esc=x=>String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+$('date').value=(()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`})();let editId=null;
+function persist(){localStorage.setItem(KEY,JSON.stringify(s));render()}
+function list(){return s.logs[$('date').value]||[]}
+function sum(a){return a.reduce((t,e)=>{let f=s.foods.find(x=>x.id===e.id);if(f)for(let k of ['kcal','protein','carbs','fat'])t[k]+=num(f[k])*e.qty;return t},{kcal:0,protein:0,carbs:0,fat:0})}
+function dateShift(dateText,offset){let [y,m,d]=dateText.split('-').map(Number),dt=new Date(y,m-1,d);dt.setDate(dt.getDate()+offset);return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`}
+function drawWeeklyChart(elementId,key,target,unit,color,endDate){let days=Array.from({length:7},(_,i)=>{let date=dateShift(endDate,i-6),items=s.logs[date]||[],value=sum(items)[key];let [y,m,d]=date.split('-').map(Number),dt=new Date(y,m-1,d);return {date,value,day:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][dt.getDay()],label:`${m}/${d}`}});let max=Math.max(target,...days.map(x=>x.value),1)*1.16,W=340,H=174,left=10,right=8,top=18,bottom=138,plotH=bottom-top,base=bottom,step=(W-left-right)/7,barW=20,yTarget=base-(target/max)*plotH;let grid=[0,.5,1].map(r=>{let y=base-r*plotH;return `<line x1="${left}" y1="${y}" x2="${W-right}" y2="${y}" stroke="#e8eee9" stroke-width="1"/><text x="${left}" y="${y-3}" font-size="8" fill="#809087">${Math.round(max*r)}</text>`}).join('');let bars=days.map((d,i)=>{let x=left+step*i+step/2-barW/2,h=Math.max(0,(d.value/max)*plotH),y=base-h;return `<rect x="${x}" y="${y}" width="${barW}" height="${h}" rx="3" fill="${color}" opacity=".9"><title>${d.date}: ${fmt(d.value)} ${unit}</title></rect><text x="${x+barW/2}" y="${Math.max(top-3,y-4)}" text-anchor="middle" font-size="8" fill="#405249">${d.value?fmt(d.value):''}</text><text x="${x+barW/2}" y="154" text-anchor="middle" font-size="9" fill="#52645a">${d.day}</text><text x="${x+barW/2}" y="166" text-anchor="middle" font-size="8" fill="#829087">${d.label}</text>`}).join('');let line=`<line x1="${left}" y1="${yTarget}" x2="${W-right}" y2="${yTarget}" stroke="#b47a24" stroke-width="2" stroke-dasharray="5 4"><title>Daily target: ${target} ${unit}</title></line>`;$(elementId).innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Seven day ${key} chart with target ${target} ${unit}">${grid}${bars}${line}</svg>`}
+function render(){let q=$('search').value.toLowerCase(),matches=s.foods.filter(f=>(f.name+' '+f.brand).toLowerCase().includes(q));$('food').innerHTML=matches.map(f=>`<option value="${f.id}">${esc(f.name)} · ${esc(f.brand)} (${f.amount}${f.unit})</option>`).join('');
+let t=sum(list()),tc=s.targets.calories||1500,tp=s.targets.protein||100;$('cal').textContent=`${fmt(t.kcal)} / ${tc} kcal`;$('pro').textContent=`${fmt(t.protein)} / ${tp} g`;$('macros').textContent=`${fmt(t.carbs)} g / ${fmt(t.fat)} g`;$('calbar').style.width=Math.min(100,t.kcal/tc*100)+'%';$('probar').style.width=Math.min(100,t.protein/tp*100)+'%';$('calleft').textContent=t.kcal<=tc?`${fmt(tc-t.kcal)} kcal remaining`:`${fmt(t.kcal-tc)} kcal over target`;$('proleft').textContent=t.protein>=tp?`${fmt(t.protein-tp)} g above target`:`${fmt(tp-t.protein)} g to target`;
+$('log').innerHTML=['Breakfast','Lunch','Dinner','Snack'].map(m=>{let rows=list().map((e,i)=>({...e,i,f:s.foods.find(f=>f.id===e.id)})).filter(e=>e.meal===m&&e.f),sub=sum(rows);return `<div class="meal"><b>${m}</b> <small>· ${fmt(sub.kcal)} kcal</small>${rows.length?`<table><tbody>${rows.map(e=>`<tr><td>${esc(e.f.name)}<div class="tiny">${esc(e.f.brand)} · ${e.qty} × ${e.f.amount}${e.f.unit}</div></td><td class="right">${fmt(e.f.kcal*e.qty)} kcal</td><td class="right">${fmt(e.f.protein*e.qty)} g</td><td><button class="danger" data-rm="${e.i}">Remove</button></td></tr>`).join('')}</tbody></table>`:'<div class="tiny">No foods logged</div>'}</div>`}).join('');
+$('log').querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{list().splice(+b.dataset.rm,1);persist()});
+let dbq=$('dbsearch').value.toLowerCase(),cat=$('dbcat').value;$('foods').innerHTML=s.foods.filter(f=>(f.name+' '+f.brand).toLowerCase().includes(dbq)&&(!cat||f.category===cat)).map(f=>`<tr><td><b>${esc(f.name)}</b><div class="tiny">${esc(f.brand)} · ${f.category}</div></td><td>${f.amount} ${f.unit}</td><td class="right">${fmt(f.kcal)}</td><td class="right">${fmt(f.protein)} g</td><td class="right"><button class="secondary" data-ed="${f.id}">Edit</button> <button class="danger" data-del="${f.id}">Del</button></td></tr>`).join('');
+$('foods').querySelectorAll('[data-ed]').forEach(b=>b.onclick=()=>edit(b.dataset.ed));$('foods').querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{if(confirm('Delete this food?')){s.foods=s.foods.filter(f=>f.id!==b.dataset.del);persist()}});
+let dates=Object.keys(s.logs).sort().reverse().filter(d=>s.logs[d].length).slice(0,7);$('history').innerHTML=dates.map(d=>{let a=sum(s.logs[d]);return `<tr><td>${d}</td><td class="right">${fmt(a.kcal)}</td><td class="right">${fmt(a.protein)} g</td><td class="right">${fmt(a.carbs)} g</td><td class="right">${fmt(a.fat)} g</td></tr>`}).join('')||'<tr><td colspan="5">No logged days yet</td></tr>';drawWeeklyChart('calChart','kcal',tc,'kcal','#258653',$('date').value);drawWeeklyChart('proChart','protein',tp,'g','#287f9d',$('date').value)}
+$('add').onclick=()=>{let id=$('food').value,qty=num($('qty').value);if(!id||qty<=0)return;(s.logs[$('date').value]??=[]).push({id,qty,meal:$('meal').value});$('qty').value=1;persist()};$('date').onchange=render;$('search').oninput=render;$('dbsearch').oninput=render;$('dbcat').onchange=render;
+function clear(){['name','brand','kcal','protein','carbs','fat'].forEach(x=>$(x).value='');$('amount').value=100;$('unit').value='g';$('category').value='Other'}
+function edit(id){let f=s.foods.find(x=>x.id===id);if(!f)return;editId=id;$('editTitle').textContent='Edit food';for(let k of ['name','brand','category','amount','unit','kcal','protein','carbs','fat'])$(k).value=f[k];$('editor').classList.remove('hidden')}
+$('new').onclick=()=>{editId=null;clear();$('editTitle').textContent='Add food';$('editor').classList.remove('hidden')};$('cancel').onclick=()=>$('editor').classList.add('hidden');
+$('save').onclick=()=>{let f={id:editId||'custom'+Date.now(),name:$('name').value.trim(),brand:$('brand').value.trim()||'Generic',category:$('category').value,amount:num($('amount').value),unit:$('unit').value,kcal:num($('kcal').value),protein:num($('protein').value),carbs:num($('carbs').value),fat:num($('fat').value)};if(!f.name||f.amount<=0){alert('Enter a food name and serving amount.');return}if(editId)s.foods=s.foods.map(x=>x.id===editId?f:x);else s.foods.push(f);$('editor').classList.add('hidden');persist()};
+$('targets').onclick=()=>{s.targets={calories:Math.max(1,num($('targetCal').value)),protein:Math.max(1,num($('targetPro').value))};persist();alert('Targets saved')};
+function dl(name,data,type){let a=document.createElement('a'),u=URL.createObjectURL(new Blob([data],{type}));a.href=u;a.download=name;a.click();URL.revokeObjectURL(u)}
+$('backup').onclick=()=>dl('calorie-tracker-backup.json',JSON.stringify(s,null,2),'application/json');
+$('csv').onclick=()=>{let rows=[['Food','Brand','Category','Serving amount','Unit','Calories kcal','Protein g','Carbs g','Fat g'],...s.foods.map(f=>[f.name,f.brand,f.category,f.amount,f.unit,f.kcal,f.protein,f.carbs,f.fat])];dl('food-database.csv',rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n'),'text/csv')};
+$('import').onchange=async e=>{try{let d=JSON.parse(await e.target.files[0].text());if(!Array.isArray(d.foods)||!d.logs)throw 0;if(confirm('Replace current data with this backup?')){s=d;persist()}}catch(x){alert('Invalid tracker backup')}e.target.value=''};
+
+// Barcode scanning: native BarcodeDetector where supported; Open Food Facts lookup.
+let scanStream=null, scanFrame=null, scanActive=false, scanBusy=false;
+function stopScanner(){
+  scanActive=false;
+  if(scanFrame!==null)cancelAnimationFrame(scanFrame);
+  scanFrame=null;
+  if(scanStream){scanStream.getTracks().forEach(t=>t.stop());scanStream=null}
+  const v=$('scanVideo');v.pause();v.srcObject=null;v.style.display='none';
+}
+function closeScanner(){stopScanner();$('scannerPanel').classList.add('hidden')}
+$('scanOpen').onclick=async()=>{
+  $('scannerPanel').classList.remove('hidden');
+  $('scanStatus').textContent='Checking camera access…';
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    $('scanStatus').textContent='This page cannot access the camera. Open it from an HTTPS website (not a file preview), then allow camera permission. You can still enter the barcode manually.';
+    return;
+  }
+  try{
+    // Start the camera first. Some browsers can show camera preview but do not
+    // implement the native BarcodeDetector API.
+    scanStream=await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:{ideal:'environment'}},audio:false
+    });
+    const video=$('scanVideo');
+    video.srcObject=scanStream;
+    video.style.display='block';
+    await video.play();
+
+    if(!('BarcodeDetector' in window)){
+      scanActive=false;
+      $('scanStatus').textContent='Camera is on, but this browser does not support automatic barcode reading. Enter the JAN/EAN number below, or open this page in a supported Android Chrome browser.';
+      return;
+    }
+
+    let detector;
+    try{
+      const formats=['ean_13','ean_8','upc_a','upc_e','code_128'];
+      const supported=BarcodeDetector.getSupportedFormats
+        ? await BarcodeDetector.getSupportedFormats() : formats;
+      const usable=formats.filter(f=>supported.includes(f));
+      if(!usable.length)throw new Error('No compatible barcode formats');
+      detector=new BarcodeDetector({formats:usable});
+    }catch(detectorError){
+      $('scanStatus').textContent='Camera is on, but automatic JAN/EAN scanning is not supported by this browser. Enter the barcode number below.';
+      return;
+    }
+
+    scanActive=true;
+    $('scanStatus').textContent='Camera is on. Point the rear camera at the barcode and hold it steady.';
+    const tick=async()=>{
+      if(!scanActive||scanBusy)return;
+      try{
+        if(video.readyState>=2){
+          const codes=await detector.detect(video);
+          if(codes.length&&codes[0].rawValue){
+            scanBusy=true;
+            const code=codes[0].rawValue;
+            $('barcodeInput').value=code;
+            $('scanStatus').textContent='Barcode detected. Looking up product…';
+            stopScanner();
+            await lookupBarcode(code);
+            scanBusy=false;
+            return;
+          }
+        }
+      }catch(err){
+        $('scanStatus').textContent='Camera is active, but the barcode could not be read. Try brighter light and hold the barcode steady.';
+      }
+      if(scanActive)scanFrame=requestAnimationFrame(tick);
+    };
+    scanFrame=requestAnimationFrame(tick);
+  }catch(err){
+    stopScanner();
+    let msg='Could not start the camera.';
+    if(err.name==='NotAllowedError'||err.name==='PermissionDeniedError')
+      msg='Camera permission was denied. Allow camera access for this website in your browser settings, then try again.';
+    else if(err.name==='NotFoundError'||err.name==='DevicesNotFoundError')
+      msg='No camera was found on this device.';
+    else if(err.name==='NotReadableError'||err.name==='TrackStartError')
+      msg='The camera is already being used by another app. Close other camera apps and try again.';
+    else if(err.name==='SecurityError'||!window.isSecureContext)
+      msg='Camera access requires a secure HTTPS page. Open this tracker from an HTTPS website rather than a local file or preview.';
+    $('scanStatus').textContent=msg+' You can still enter the barcode manually.';
+  }
+};
+$('scanClose').onclick=closeScanner;
+async function lookupBarcode(raw){
+  const code=String(raw||'').replace(/\D/g,'');
+  if(code.length<8||code.length>14){$('scanStatus').textContent='Enter a valid barcode number (8–14 digits).';return}
+  $('barcodeLookup').disabled=true;$('scanStatus').textContent='Searching product database…';
+  try{
+    const url='https://world.openfoodfacts.org/api/v2/product/'+encodeURIComponent(code)+'.json?fields=code,product_name,product_name_en,brands,quantity,serving_size,nutriments';
+    const response=await fetch(url,{headers:{Accept:'application/json'}});
+    if(!response.ok)throw new Error('Network error');
+    const data=await response.json();
+    if(data.status!==1||!data.product)throw new Error('Product not found');
+    const p=data.product,n=p.nutriments||{};
+    let baseKcal=Number(n['energy-kcal_100g']);
+    if(!Number.isFinite(baseKcal)||baseKcal<=0){
+      const kj=Number(n['energy_100g']);baseKcal=Number.isFinite(kj)&&kj>0?kj/4.184:NaN;
+    }
+    const baseProtein=Number(n.proteins_100g),baseCarbs=Number(n.carbohydrates_100g),baseFat=Number(n.fat_100g);
+    if(!Number.isFinite(baseKcal)&&!Number.isFinite(baseProtein)&&!Number.isFinite(baseCarbs)&&!Number.isFinite(baseFat))
+      throw new Error('Product found, but nutrition values are missing');
+    const serving=String(p.serving_size||'');
+    const match=serving.match(/(\d+(?:[.,]\d+)?)\s*(g|ml)\b/i);
+    const amount=match?Number(match[1].replace(',','.')):100;
+    const unit=match?match[2].toLowerCase():'g';
+    const factor=amount/100;
+    const safe=v=>Number.isFinite(v)?fmt(v*factor):0;
+    const name=p.product_name||p.product_name_en||('Scanned product '+code);
+    const brand=p.brands||'Brand not listed';
+    const existing=s.foods.find(f=>f.barcode===code);
+    let food;
+    if(existing){
+      food=existing;
+      food.name=name;food.brand=brand;food.amount=amount;food.unit=unit;
+      food.kcal=safe(baseKcal);food.protein=safe(baseProtein);food.carbs=safe(baseCarbs);food.fat=safe(baseFat);
+      food.source='Open Food Facts · verify package label';
+    }else{
+      food={id:'barcode'+code,name,brand,category:$('meal').value,amount,unit,kcal:safe(baseKcal),protein:safe(baseProtein),carbs:safe(baseCarbs),fat:safe(baseFat),barcode:code,source:'Open Food Facts · verify package label'};
+      s.foods.push(food);
+    }
+    $('search').value='';$('qty').value=1;
+    persist();
+    $('food').value=food.id;
+    $('scanStatus').textContent='Added to your food database: '+name+'. Check the serving and nutrition against the package before logging.';
+    $('barcodeInput').value=code;
+  }catch(err){
+    $('scanStatus').textContent=err.message==='Product not found'
+      ?'No product record found for this barcode. Try entering it again, or add the food manually using the package label.'
+      :err.message==='Product found, but nutrition values are missing'
+        ?'Product record found, but nutrition values are missing. Add the nutrition from the package label manually.'
+        :'Could not retrieve the product. Check your internet connection and try again.';
+  }finally{$('barcodeLookup').disabled=false}
+}
+$('barcodeLookup').onclick=()=>lookupBarcode($('barcodeInput').value);
+$('barcodeInput').addEventListener('keydown',e=>{if(e.key==='Enter')lookupBarcode($('barcodeInput').value)});
+window.addEventListener('pagehide',stopScanner);
+
+$('targetCal').value=s.targets.calories||1500;$('targetPro').value=s.targets.protein||100;render();
+</script></body></html>
