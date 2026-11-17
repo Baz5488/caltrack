@@ -43,7 +43,7 @@
 <section class="panel"><div class="row" style="justify-content:space-between"><h2>Daily food log</h2><div class="field" style="max-width:180px"><label>Date</label><input id="date" type="date"></div></div>
 <div class="row" style="margin:10px 0"><button id="scanOpen" type="button">▦ Scan product barcode</button><span class="tiny">Scan EAN / JAN barcodes, or enter the number manually.</span></div>
 <div id="scannerPanel" class="hidden" style="border:1px solid #dce6df;background:#f7faf8;border-radius:10px;padding:12px;margin:10px 0">
-  <div class="row" style="justify-content:space-between"><b>Barcode lookup</b><button id="scanClose" class="secondary" type="button">Close</button></div>// Barcode scanning: native BarcodeDetector where supported; Open Food Facts lookup.
+  <div class="row" style="justify-content:space-between"><b>Barcode lookup</b><button id="scanClose" class="secondary" type="button">Close</button></div>
 <label style="cursor:pointer; display:inline-block; padding:10px 14px; background:#2563eb; color:#fff; border-radius:8px; font-weight:600;">
   📷 Scan Nutrition Label
   <input type="file" id="label-photo-input" accept="image/*" capture="environment" hidden>
@@ -64,7 +64,6 @@
 <section class="panel"><h2>Targets & history</h2><div class="row"><div class="field"><label>Daily calorie target</label><input id="targetCal" type="number" value="1500"></div><div class="field"><label>Daily protein target</label><input id="targetPro" type="number" value="100"></div><button id="targets">Save targets</button></div><h3>Last 7 logged days</h3><div class="scroll"><table><thead><tr><th>Date</th><th class="right">Calories</th><th class="right">Protein</th><th class="right">Carbs</th><th class="right">Fat</th></tr></thead><tbody id="history"></tbody></table></div></section>
 <p class="tiny">Saved in this browser on this device. Use Backup JSON to transfer your data; automatic cloud sync is not included in this first version.</p>
 </main>
-<script>
 const KEY='personal_calorie_tracker_v1';
 const seed=[
 ['Greek yogurt','Generic','Breakfast',150,'g',100,15,5,3],['Honey','Generic','Breakfast',1,'tsp',21,0,5.7,0],['Blueberries','Generic','Breakfast',1,'tbsp',5,.1,1.2,0],['L-citrulline','Generic supplement','Breakfast',5,'g',0,0,0,0],['Whey protein powder','Generic','Breakfast',7,'g',28,5.5,.5,.4],['Pumpkin/sunflower/goji mix','Generic','Breakfast',10,'g',50,2,3,3.8],['Whole wheat bread','Generic','Breakfast',1,'slice',80,4,14,1.2],['Peanut butter','Generic','Breakfast',1,'tbsp',95,4,3.5,8],['Hard-boiled egg','Generic','Breakfast',1,'piece',78,6.3,.6,5.3],['Broccoli','Generic','Other',70,'g',24,2,4.6,.3],['Dried prune','Generic','Snack',1,'piece',23,.2,6.1,0],['Red apple with skin','Generic','Snack',.5,'piece',47,.2,12.5,.2],
