@@ -1,644 +1,238 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Personal Calorie Tracker</title>
-  <style>
-    :root { --bg:#f4f7f5; --card:#ffffff; --text:#17251d; --muted:#5a6b61; --accent:#1f7a4c; --accent-light:#e8f3ed; --border:#dce6df; --danger:#c93b3b; }
-    * { box-sizing:border-box; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
-    body { margin:0; background:var(--bg); color:var(--text); padding:16px; }
-    .container { max-width:720px; margin:0 auto; }
-    .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:16px; box-shadow:0 2px 6px rgba(0,0,0,0.03); }
-    h1,h2,h3 { margin:0 0 12px; }
-    h1 { font-size:1.35rem; }
-    h2 { font-size:1.1rem; }
-    .row { display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; }
-    .field { display:flex; flex-direction:column; flex:1; min-width:110px; }
-    label { font-size:0.8rem; color:var(--muted); margin-bottom:4px; font-weight:600; }
-    input, select { padding:9px 10px; border:1px solid var(--border); border-radius:8px; font-size:0.95rem; background:#fff; color:var(--text); }
-    button { padding:9px 14px; border:none; border-radius:8px; background:var(--accent); color:#fff; font-weight:600; cursor:pointer; font-size:0.9rem; }
-    button:disabled { opacity:0.6; cursor:not-allowed; }
-    button.secondary { background:var(--accent-light); color:var(--accent); }
-    button.danger { background:#fdeaea; color:var(--danger); padding:5px 9px; font-size:0.8rem; }
-    .hidden { display:none !important; }
-    .tiny { font-size:0.8rem; color:var(--muted); margin:6px 0; }
-    .summary-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:10px; }
-    .stat { background:var(--bg); padding:10px; border-radius:8px; text-align:center; }
-    .stat b { display:block; font-size:1.1rem; color:var(--accent); }
-    .bar-wrap { background:var(--border); height:10px; border-radius:99px; overflow:hidden; margin-top:8px; }
-    .bar-fill { background:var(--accent); height:100%; width:0%; transition:width 0.25s; }
-    .list-item { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border); gap:8px; }
-    .list-item:last-child { border-bottom:none; }
-    .badge { background:var(--accent-light); color:var(--accent); padding:2px 8px; border-radius:99px; font-size:0.75rem; font-weight:600; }
-    .photo-btn { cursor:pointer; display:inline-flex; align-items:center; gap:6px; padding:9px 14px; background:#2563eb; color:#fff; border-radius:8px; font-weight:600; font-size:0.9rem; margin:0; }
-  </style>
-</head>
-<body>
-<div class="container">
-  <!-- Header & Date -->
-  <div class="card">
-    <div class="row" style="justify-content:space-between; align-items:center;">
-      <h1>Personal Calorie Tracker</h1>
-      <input type="date" id="logDate">
-    </div>
-    <div class="row" style="margin-top:10px;">
-      <div class="field"><label>Daily Calorie Target</label><input type="number" id="targetCal" value="1800"></div>
-      <div class="field"><label>Daily Protein Target (g)</label><input type="number" id="targetPro" value="120"></div>
-      <button id="saveTargetsBtn" class="secondary" type="button">Save Targets</button>
-    </div>
-    <div class="summary-grid">
-      <div class="stat"><b id="sumCal">0</b><span class="tiny">kcal</span></div>
-      <div class="stat"><b id="sumPro">0g</b><span class="tiny">Protein</span></div>
-      <div class="stat"><b id="sumCarb">0g</b><span class="tiny">Carbs</span></div>
-      <div class="stat"><b id="sumFat">0g</b><span class="tiny">Fat</span></div>
-    </div>
-    <div class="bar-wrap"><div class="bar-fill" id="calBar"></div></div>
-    <p id="syncStatus" class="tiny">Ready</p>
-  </div>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Personal Calorie Tracker</title>
+<style>
+:root{font-family:system-ui;color:#20302a;background:#f3f6f4}*{box-sizing:border-box}body{margin:0}header{background:#17452f;color:white;padding:20px}main{max-width:1050px;margin:20px auto;padding:0 14px;display:grid;gap:14px}.panel,.metric{background:white;border:1px solid #dce6df;border-radius:13px;padding:15px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.muted,small{color:#64756b}.big{font-size:26px;font-weight:750}.bar{height:8px;background:#e6eee8;border-radius:9px;overflow:hidden}.bar i{display:block;height:100%;background:#16834a}h2{font-size:18px;margin:0 0 12px}.row{display:flex;gap:9px;align-items:end;flex-wrap:wrap}.field{flex:1;min-width:120px}label{display:block;font-size:12px;color:#607166;margin-bottom:4px}input,select{width:100%;padding:9px;border:1px solid #cbd8cf;border-radius:8px;background:white;font:inherit}button,.filelabel{padding:9px 12px;border:0;border-radius:8px;background:#17633c;color:white;font:inherit;cursor:pointer}.secondary{background:#e8efea;color:#244333}.danger{background:#fff0f0;color:#a11}.scroll{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}td,th{text-align:left;padding:8px;border-bottom:1px solid #e6ece8}th{color:#637369}.right{text-align:right;white-space:nowrap}.tiny{font-size:11px;color:#68796f}.meal{margin-top:12px}.formgrid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:8px}.hidden{display:none!important}.notice{font-size:12px;background:#fff8e7;padding:10px;border-radius:8px;color:#70551b}@media(max-width:650px){.stats{grid-template-columns:1fr}.formgrid{grid-template-columns:1fr 1fr}.formgrid .wide{grid-column:span 2}}
 
-  <!-- Log Meal -->
-  <div class="card">
-    <h2>Log Food</h2>
-    <div class="row">
-      <div class="field"><label>Meal</label>
-        <select id="mealSelect">
-          <option>Breakfast</option>
-          <option>Lunch</option>
-          <option>Dinner</option>
-          <option>Snack</option>
-        </select>
-      </div>
-      <div class="field" style="flex:2;"><label>Food</label><select id="foodSelect"></select></div>
-      <div class="field"><label>Servings</label><input type="number" id="servingsInput" value="1" step="0.1" min="0.1"></div>
-      <button id="addLogBtn" type="button">Add to Log</button>
-    </div>
-    <div id="todayLogs" style="margin-top:14px;"></div>
-  </div>
+/* Smartphone-first vertical layout */
+@media (max-width: 700px) {
+  header { padding: 16px; }
+  header h1 { font-size: 20px; }
+  main { margin: 12px auto; padding: 0 10px 28px; gap: 11px; }
+  .stats { grid-template-columns: 1fr; gap: 8px; }
+  .metric { padding: 12px 14px; }
+  .big { font-size: 23px; }
+  .panel { padding: 13px; border-radius: 11px; }
+  .row { display: flex; flex-direction: column; align-items: stretch; gap: 9px; }
+  .row > .field, .row > button, .row > .filelabel { width: 100%; max-width: none !important; }
+  .row > h2 { margin-bottom: 0; }
+  .row[style*="justify-content:space-between"] { align-items: stretch; }
+  .formgrid { grid-template-columns: 1fr; }
+  .formgrid .wide { grid-column: auto; }
+  input, select { min-height: 42px; font-size: 16px; }
+  button, .filelabel { min-height: 42px; text-align: center; }
+  .scroll { margin-left: -2px; margin-right: -2px; }
+  table { min-width: 510px; }
+  .meal table { min-width: 430px; }
+  .notice { line-height: 1.5; }
+  .tiny { line-height: 1.45; }
+  #editor .row { flex-direction: column; }
+  #editor .row button { width: 100%; }
+}
+@media (min-width: 701px) {
+  .stats { grid-template-columns: repeat(3, 1fr); }
+}
+#scanVideo{width:100%}#scannerPanel .row{align-items:end}@media(max-width:700px){#scannerPanel .row{flex-direction:column;align-items:stretch}#scannerPanel .row button{width:100%}}.chartgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.chartbox{min-width:0;border:1px solid #e2eae4;border-radius:10px;padding:12px;background:#fbfdfb}.chartbox h3{font-size:15px;margin:0 0 8px}.chartbox svg{display:block;width:100%;height:auto;overflow:visible}.chartlegend{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;font-size:12px;color:#607166;margin-top:4px}.chartlegend span{display:inline-flex;align-items:center;gap:6px}.legendbar{display:inline-block;width:12px;height:12px;border-radius:3px}.callegend{background:#258653}.prolegend{background:#287f9d}.legendline{display:inline-block;width:18px;border-top:2px dashed #b47a24}@media(max-width:700px){.chartgrid{grid-template-columns:1fr}.chartbox{padding:10px}}
 
-  <!-- Add New Food + Barcode & Label Scanner -->
-  <div class="card">
-    <div class="row" style="justify-content:space-between; align-items:center;">
-      <h2>Add / Scan Food</h2>
-      <button id="scanOpen" class="secondary" type="button">Scan Barcode / Label</button>
-    </div>
-
-    <!-- Scanner Panel -->
-    <div id="scannerPanel" class="hidden" style="border:1px solid #dce6df;background:#f7faf8;border-radius:10px;padding:12px;margin:10px 0">
-      <div class="row" style="justify-content:space-between; align-items:center;">
-        <b>Barcode & Label Scanner</b>
-        <button id="scanClose" class="secondary" type="button">Close</button>
-      </div>
-
-      <div class="row" style="margin-top:10px;">
-        <button id="startCamBtn" type="button">Start Barcode Camera</button>
-        <label class="photo-btn">
-          📷 Scan Nutrition Label
-          <input type="file" id="label-photo-input" accept="image/*" capture="environment" hidden>
-        </label>
-      </div>
-
-      <video id="scanVideo" playsinline muted style="display:none;width:100%;max-height:260px;object-fit:cover;border-radius:8px;background:#17251d;margin:8px 0"></video>
-      <p id="scanStatus" class="tiny">Start the camera for a barcode, snap a nutrition label photo, or type the barcode below.</p>
-
-      <div class="row">
-        <div class="field">
-          <label>Barcode number (JAN / EAN / UPC)</label>
-          <input id="barcodeInput" inputmode="numeric" autocomplete="off" placeholder="e.g. 4901234567890">
-        </div>
-        <button id="barcodeLookup" type="button">Look up</button>
-      </div>
-    </div>
-
-    <!-- Food Form -->
-    <div class="row" style="margin-top:10px;">
-      <div class="field" style="flex:2;"><label>Food Name</label><input id="fName" placeholder="e.g. Grilled Salmon"></div>
-      <div class="field"><label>Brand (optional)</label><input id="fBrand" placeholder="e.g. Meiji"></div>
-      <div class="field"><label>Barcode</label><input id="fBarcode" placeholder="Optional"></div>
-    </div>
-    <div class="row" style="margin-top:10px;">
-      <div class="field"><label>Serving Size</label><input type="number" id="fServing" value="100"></div>
-      <div class="field"><label>Unit</label><input id="fUnit" value="g"></div>
-      <div class="field"><label>Calories (kcal)</label><input type="number" id="fCal" value="0"></div>
-      <div class="field"><label>Protein (g)</label><input type="number" id="fPro" value="0" step="0.1"></div>
-      <div class="field"><label>Carbs (g)</label><input type="number" id="fCarb" value="0" step="0.1"></div>
-      <div class="field"><label>Fat (g)</label><input type="number" id="fFat" value="0" step="0.1"></div>
-    </div>
-    <div style="margin-top:12px;">
-      <button id="saveFoodBtn" type="button">Save Food to Database</button>
-    </div>
-  </div>
+</style></head><body>
+<header><h1 style="margin:0">Personal Calorie Tracker</h1><div>Your everyday foods · calories · protein · nutrition history</div></header>
+<main>
+<section class="stats">
+<div class="metric"><small>CALORIES TODAY</small><div class="big" id="cal">0 / 1,500 kcal</div><div class="bar"><i id="calbar"></i></div><small id="calleft">1,500 kcal remaining</small></div>
+<div class="metric"><small>PROTEIN TODAY</small><div class="big" id="pro">0 / 100 g</div><div class="bar"><i id="probar"></i></div><small id="proleft">100 g to target</small></div>
+<div class="metric"><small>CARBS / FAT</small><div class="big" id="macros">0 g / 0 g</div><small>Estimated logged totals</small></div>
+</section>
+<section class="panel"><div class="row" style="justify-content:space-between"><h2>Daily food log</h2><div class="field" style="max-width:180px"><label>Date</label><input id="date" type="date"></div></div>
+<div class="row" style="margin:10px 0"><button id="scanOpen" type="button">▦ Scan product barcode</button><span class="tiny">Scan EAN / JAN barcodes, or enter the number manually.</span></div>
+<div id="scannerPanel" class="hidden" style="border:1px solid #dce6df;background:#f7faf8;border-radius:10px;padding:12px;margin:10px 0">
+  <div class="row" style="justify-content:space-between"><b>Barcode lookup</b><button id="scanClose" class="secondary" type="button">Close</button></div>
+  <video id="scanVideo" playsinline muted style="display:none;width:100%;max-height:260px;object-fit:cover;border-radius:8px;background:#17251d;margin:8px 0"></video>
+  <p id="scanStatus" class="tiny">Start the camera or enter the barcode printed below the product's bars.</p>
+  <div class="row"><div class="field"><label>Barcode number (JAN / EAN / UPC)</label><input id="barcodeInput" inputmode="numeric" autocomplete="off" placeholder="e.g. 4901234567890"></div><button id="barcodeLookup" type="button">Look up</button></div>
+  <p class="tiny">Product details are retrieved from Open Food Facts. Japanese product coverage varies; always compare the returned nutrition values with the package label.</p>
 </div>
-
+<div class="row"><div class="field"><label>Search food / brand</label><input id="search" placeholder="e.g. salmon, Meiji"></div><div class="field"><label>Meal</label><select id="meal"><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option></select></div><div class="field" style="flex:2"><label>Food</label><select id="food"></select></div><div class="field"><label>Servings</label><input id="qty" type="number" min=".1" step=".1" value="1"></div><button id="add">Add food</button></div>
+<p class="notice">Serving multiplier: 0.5 = half a serving; for 10 g nuts when the database serving is 30 g, enter 0.33.</p><div id="log"></div></section>
+<section class="panel" id="weeklyProgress"><h2>Weekly progress · last 7 days</h2><p class="tiny">The week ends on the date selected above. Dashed line = daily target; bars = actual intake. Days with no entries are shown as zero.</p><div class="chartgrid"><div class="chartbox"><h3>Calories (kcal)</h3><div id="calChart"></div><div class="chartlegend"><span><i class="legendbar callegend"></i>Actual</span><span><i class="legendline"></i>Target</span></div></div><div class="chartbox"><h3>Protein (g)</h3><div id="proChart"></div><div class="chartlegend"><span><i class="legendbar prolegend"></i>Actual</span><span><i class="legendline"></i>Target</span></div></div></div></section>
+<section class="panel"><div class="row" style="justify-content:space-between"><h2>Food database</h2><div class="row"><button class="secondary" id="new">+ Add food</button><button class="secondary" id="csv">Export CSV</button><button class="secondary" id="backup">Backup JSON</button><label class="filelabel">Import JSON<input id="import" type="file" accept=".json" hidden></label></div></div>
+<div id="editor" class="hidden" style="background:#f6faf7;padding:12px;border-radius:9px"><h3 id="editTitle">Add food</h3><div class="formgrid">
+<div class="wide"><label>Food name</label><input id="name"></div><div><label>Brand</label><input id="brand" placeholder="Generic / Meiji"></div><div><label>Category</label><select id="category"><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option><option>Other</option></select></div>
+<div><label>Serving amount</label><input id="amount" type="number" value="100"></div><div><label>Unit</label><select id="unit"><option>g</option><option>ml</option><option>piece</option><option>slice</option><option>tbsp</option><option>tsp</option><option>cup</option></select></div><div><label>Calories kcal</label><input id="kcal" type="number" step=".1"></div><div><label>Protein g</label><input id="protein" type="number" step=".1"></div><div><label>Carbs g</label><input id="carbs" type="number" step=".1"></div><div><label>Fat g</label><input id="fat" type="number" step=".1"></div></div><div class="row" style="justify-content:flex-end;margin-top:10px"><button class="secondary" id="cancel">Cancel</button><button id="save">Save food</button></div></div>
+<div class="row" style="margin-top:12px"><div class="field"><label>Filter database</label><input id="dbsearch" placeholder="Food or brand"></div><div class="field"><label>Category</label><select id="dbcat"><option value="">All</option><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option><option>Other</option></select></div></div><div class="scroll"><table><thead><tr><th>Food / brand</th><th>Serving</th><th class="right">kcal</th><th class="right">Protein</th><th></th></tr></thead><tbody id="foods"></tbody></table></div><p class="tiny">Initial nutrition values are estimates. Edit entries using the package label for your actual Japanese products.</p></section>
+<section class="panel"><h2>Targets & history</h2><div class="row"><div class="field"><label>Daily calorie target</label><input id="targetCal" type="number" value="1500"></div><div class="field"><label>Daily protein target</label><input id="targetPro" type="number" value="100"></div><button id="targets">Save targets</button></div><h3>Last 7 logged days</h3><div class="scroll"><table><thead><tr><th>Date</th><th class="right">Calories</th><th class="right">Protein</th><th class="right">Carbs</th><th class="right">Fat</th></tr></thead><tbody id="history"></tbody></table></div></section>
+<p class="tiny">Saved in this browser on this device. Use Backup JSON to transfer your data; automatic cloud sync is not included in this first version.</p>
+</main>
 <script>
-const APPS_SCRIPT_URL = 'https://google.com';
-const STORAGE_KEY = 'calorie_tracker_v1';
-const $ = id => document.getElementById(id);
+const KEY='personal_calorie_tracker_v1';
+const seed=[
+['Greek yogurt','Generic','Breakfast',150,'g',100,15,5,3],['Honey','Generic','Breakfast',1,'tsp',21,0,5.7,0],['Blueberries','Generic','Breakfast',1,'tbsp',5,.1,1.2,0],['L-citrulline','Generic supplement','Breakfast',5,'g',0,0,0,0],['Whey protein powder','Generic','Breakfast',7,'g',28,5.5,.5,.4],['Pumpkin/sunflower/goji mix','Generic','Breakfast',10,'g',50,2,3,3.8],['Whole wheat bread','Generic','Breakfast',1,'slice',80,4,14,1.2],['Peanut butter','Generic','Breakfast',1,'tbsp',95,4,3.5,8],['Hard-boiled egg','Generic','Breakfast',1,'piece',78,6.3,.6,5.3],['Broccoli','Generic','Other',70,'g',24,2,4.6,.3],['Dried prune','Generic','Snack',1,'piece',23,.2,6.1,0],['Red apple with skin','Generic','Snack',.5,'piece',47,.2,12.5,.2],
+['White rice, cooked','Generic Japanese short-grain','Lunch',200,'g',312,5,71,.6],['Brown rice, cooked','Generic','Lunch',200,'g',304,5.5,64,2.2],['Fried egg','Generic','Lunch',1,'piece',90,6,.5,7],['Fried tempeh','Generic','Lunch',30,'g',60,6,3,3.5],['Grilled salmon','Generic','Lunch',120,'g',250,26,0,16],['Grilled mackerel','Generic','Lunch',120,'g',245,25,0,17],['Boiled shrimp','Generic','Lunch',20,'g',20,5,0,.1],['Romaine lettuce + tomato','Generic','Lunch',1,'cup',20,1,4,.2],
+['86% cacao dark chocolate','Meiji (estimate)','Snack',2,'piece',60,1,4,5],['Mixed nuts','Generic','Snack',30,'g',175,5.5,5,15.5],['Banana','Generic','Snack',1,'piece',105,1.3,27,.4],['Black coffee','Generic','Snack',300,'ml',2,.3,0,0]
+];
+const fresh=()=>({foods:seed.map((a,i)=>({id:'f'+i,name:a[0],brand:a[1],category:a[2],amount:a[3],unit:a[4],kcal:a[5],protein:a[6],carbs:a[7],fat:a[8]})),logs:{},targets:{calories:1500,protein:100}});
+let s;try{s=JSON.parse(localStorage.getItem(KEY))||fresh()}catch(e){s=fresh()}if(!s.foods||!s.logs)s=fresh();
+const $=x=>document.getElementById(x),num=x=>Number(x)||0,fmt=x=>Math.round(x*10)/10,esc=x=>String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+$('date').value=(()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`})();let editId=null;
+function persist(){localStorage.setItem(KEY,JSON.stringify(s));render()}
+function list(){return s.logs[$('date').value]||[]}
+function sum(a){return a.reduce((t,e)=>{let f=s.foods.find(x=>x.id===e.id);if(f)for(let k of ['kcal','protein','carbs','fat'])t[k]+=num(f[k])*e.qty;return t},{kcal:0,protein:0,carbs:0,fat:0})}
+function dateShift(dateText,offset){let [y,m,d]=dateText.split('-').map(Number),dt=new Date(y,m-1,d);dt.setDate(dt.getDate()+offset);return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`}
+function drawWeeklyChart(elementId,key,target,unit,color,endDate){let days=Array.from({length:7},(_,i)=>{let date=dateShift(endDate,i-6),items=s.logs[date]||[],value=sum(items)[key];let [y,m,d]=date.split('-').map(Number),dt=new Date(y,m-1,d);return {date,value,day:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][dt.getDay()],label:`${m}/${d}`}});let max=Math.max(target,...days.map(x=>x.value),1)*1.16,W=340,H=174,left=10,right=8,top=18,bottom=138,plotH=bottom-top,base=bottom,step=(W-left-right)/7,barW=20,yTarget=base-(target/max)*plotH;let grid=[0,.5,1].map(r=>{let y=base-r*plotH;return `<line x1="${left}" y1="${y}" x2="${W-right}" y2="${y}" stroke="#e8eee9" stroke-width="1"/><text x="${left}" y="${y-3}" font-size="8" fill="#809087">${Math.round(max*r)}</text>`}).join('');let bars=days.map((d,i)=>{let x=left+step*i+step/2-barW/2,h=Math.max(0,(d.value/max)*plotH),y=base-h;return `<rect x="${x}" y="${y}" width="${barW}" height="${h}" rx="3" fill="${color}" opacity=".9"><title>${d.date}: ${fmt(d.value)} ${unit}</title></rect><text x="${x+barW/2}" y="${Math.max(top-3,y-4)}" text-anchor="middle" font-size="8" fill="#405249">${d.value?fmt(d.value):''}</text><text x="${x+barW/2}" y="154" text-anchor="middle" font-size="9" fill="#52645a">${d.day}</text><text x="${x+barW/2}" y="166" text-anchor="middle" font-size="8" fill="#829087">${d.label}</text>`}).join('');let line=`<line x1="${left}" y1="${yTarget}" x2="${W-right}" y2="${yTarget}" stroke="#b47a24" stroke-width="2" stroke-dasharray="5 4"><title>Daily target: ${target} ${unit}</title></line>`;$(elementId).innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Seven day ${key} chart with target ${target} ${unit}">${grid}${bars}${line}</svg>`}
+function render(){let q=$('search').value.toLowerCase(),matches=s.foods.filter(f=>(f.name+' '+f.brand).toLowerCase().includes(q));$('food').innerHTML=matches.map(f=>`<option value="${f.id}">${esc(f.name)} · ${esc(f.brand)} (${f.amount}${f.unit})</option>`).join('');
+let t=sum(list()),tc=s.targets.calories||1500,tp=s.targets.protein||100;$('cal').textContent=`${fmt(t.kcal)} / ${tc} kcal`;$('pro').textContent=`${fmt(t.protein)} / ${tp} g`;$('macros').textContent=`${fmt(t.carbs)} g / ${fmt(t.fat)} g`;$('calbar').style.width=Math.min(100,t.kcal/tc*100)+'%';$('probar').style.width=Math.min(100,t.protein/tp*100)+'%';$('calleft').textContent=t.kcal<=tc?`${fmt(tc-t.kcal)} kcal remaining`:`${fmt(t.kcal-tc)} kcal over target`;$('proleft').textContent=t.protein>=tp?`${fmt(t.protein-tp)} g above target`:`${fmt(tp-t.protein)} g to target`;
+$('log').innerHTML=['Breakfast','Lunch','Dinner','Snack'].map(m=>{let rows=list().map((e,i)=>({...e,i,f:s.foods.find(f=>f.id===e.id)})).filter(e=>e.meal===m&&e.f),sub=sum(rows);return `<div class="meal"><b>${m}</b> <small>· ${fmt(sub.kcal)} kcal</small>${rows.length?`<table><tbody>${rows.map(e=>`<tr><td>${esc(e.f.name)}<div class="tiny">${esc(e.f.brand)} · ${e.qty} × ${e.f.amount}${e.f.unit}</div></td><td class="right">${fmt(e.f.kcal*e.qty)} kcal</td><td class="right">${fmt(e.f.protein*e.qty)} g</td><td><button class="danger" data-rm="${e.i}">Remove</button></td></tr>`).join('')}</tbody></table>`:'<div class="tiny">No foods logged</div>'}</div>`}).join('');
+$('log').querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{list().splice(+b.dataset.rm,1);persist()});
+let dbq=$('dbsearch').value.toLowerCase(),cat=$('dbcat').value;$('foods').innerHTML=s.foods.filter(f=>(f.name+' '+f.brand).toLowerCase().includes(dbq)&&(!cat||f.category===cat)).map(f=>`<tr><td><b>${esc(f.name)}</b><div class="tiny">${esc(f.brand)} · ${f.category}</div></td><td>${f.amount} ${f.unit}</td><td class="right">${fmt(f.kcal)}</td><td class="right">${fmt(f.protein)} g</td><td class="right"><button class="secondary" data-ed="${f.id}">Edit</button> <button class="danger" data-del="${f.id}">Del</button></td></tr>`).join('');
+$('foods').querySelectorAll('[data-ed]').forEach(b=>b.onclick=()=>edit(b.dataset.ed));$('foods').querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{if(confirm('Delete this food?')){s.foods=s.foods.filter(f=>f.id!==b.dataset.del);persist()}});
+let dates=Object.keys(s.logs).sort().reverse().filter(d=>s.logs[d].length).slice(0,7);$('history').innerHTML=dates.map(d=>{let a=sum(s.logs[d]);return `<tr><td>${d}</td><td class="right">${fmt(a.kcal)}</td><td class="right">${fmt(a.protein)} g</td><td class="right">${fmt(a.carbs)} g</td><td class="right">${fmt(a.fat)} g</td></tr>`}).join('')||'<tr><td colspan="5">No logged days yet</td></tr>';drawWeeklyChart('calChart','kcal',tc,'kcal','#258653',$('date').value);drawWeeklyChart('proChart','protein',tp,'g','#287f9d',$('date').value)}
+$('add').onclick=()=>{let id=$('food').value,qty=num($('qty').value);if(!id||qty<=0)return;(s.logs[$('date').value]??=[]).push({id,qty,meal:$('meal').value});$('qty').value=1;persist()};$('date').onchange=render;$('search').oninput=render;$('dbsearch').oninput=render;$('dbcat').onchange=render;
+function clear(){['name','brand','kcal','protein','carbs','fat'].forEach(x=>$(x).value='');$('amount').value=100;$('unit').value='g';$('category').value='Other'}
+function edit(id){let f=s.foods.find(x=>x.id===id);if(!f)return;editId=id;$('editTitle').textContent='Edit food';for(let k of ['name','brand','category','amount','unit','kcal','protein','carbs','fat'])$(k).value=f[k];$('editor').classList.remove('hidden')}
+$('new').onclick=()=>{editId=null;clear();$('editTitle').textContent='Add food';$('editor').classList.remove('hidden')};$('cancel').onclick=()=>$('editor').classList.add('hidden');
+$('save').onclick=()=>{let f={id:editId||'custom'+Date.now(),name:$('name').value.trim(),brand:$('brand').value.trim()||'Generic',category:$('category').value,amount:num($('amount').value),unit:$('unit').value,kcal:num($('kcal').value),protein:num($('protein').value),carbs:num($('carbs').value),fat:num($('fat').value)};if(!f.name||f.amount<=0){alert('Enter a food name and serving amount.');return}if(editId)s.foods=s.foods.map(x=>x.id===editId?f:x);else s.foods.push(f);$('editor').classList.add('hidden');persist()};
+$('targets').onclick=()=>{s.targets={calories:Math.max(1,num($('targetCal').value)),protein:Math.max(1,num($('targetPro').value))};persist();alert('Targets saved')};
+function dl(name,data,type){let a=document.createElement('a'),u=URL.createObjectURL(new Blob([data],{type}));a.href=u;a.download=name;a.click();URL.revokeObjectURL(u)}
+$('backup').onclick=()=>dl('calorie-tracker-backup.json',JSON.stringify(s,null,2),'application/json');
+$('csv').onclick=()=>{let rows=[['Food','Brand','Category','Serving amount','Unit','Calories kcal','Protein g','Carbs g','Fat g'],...s.foods.map(f=>[f.name,f.brand,f.category,f.amount,f.unit,f.kcal,f.protein,f.carbs,f.fat])];dl('food-database.csv',rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n'),'text/csv')};
+$('import').onchange=async e=>{try{let d=JSON.parse(await e.target.files[0].text());if(!Array.isArray(d.foods)||!d.logs)throw 0;if(confirm('Replace current data with this backup?')){s=d;persist()}}catch(x){alert('Invalid tracker backup')}e.target.value=''};
 
-const defaultState = {
-  targets: { calories: 1800, protein: 120 },
-  foods: [
-    { id: 'f1', name: 'Boiled Egg (1 medium)', brand: '', servingAmount: 1, unit: 'egg', calories: 72, protein: 6.3, carbs: 0.4, fat: 4.8, barcode: '' },
-    { id: 'f2', name: 'Brown Rice (Cooked)', brand: '', servingAmount: 150, unit: 'g', calories: 225, protein: 4.2, carbs: 47.0, fat: 1.5, barcode: '' }
-  ],
-  logs: []
-};
-
-let state = loadLocalState();
-$('logDate').value = new Date().toISOString().slice(0, 10);
-
-function loadLocalState() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? { ...defaultState, ...JSON.parse(raw) } : structuredClone(defaultState);
-  } catch {
-    return structuredClone(defaultState);
+// Barcode scanning: native BarcodeDetector where supported; Open Food Facts lookup.
+let scanStream=null, scanFrame=null, scanActive=false, scanBusy=false;
+function stopScanner(){
+  scanActive=false;
+  if(scanFrame!==null)cancelAnimationFrame(scanFrame);
+  scanFrame=null;
+  if(scanStream){scanStream.getTracks().forEach(t=>t.stop());scanStream=null}
+  const v=$('scanVideo');v.pause();v.srcObject=null;v.style.display='none';
+}
+function closeScanner(){stopScanner();$('scannerPanel').classList.add('hidden')}
+$('scanOpen').onclick=async()=>{
+  $('scannerPanel').classList.remove('hidden');
+  $('scanStatus').textContent='Checking camera access…';
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    $('scanStatus').textContent='This page cannot access the camera. Open it from an HTTPS website (not a file preview), then allow camera permission. You can still enter the barcode manually.';
+    return;
   }
-}
-
-function saveLocalState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-}
-
-async function apiPost(action, data = {}) {
-  if (!APPS_SCRIPT_URL) return null;
-  try {
-    $('syncStatus').textContent = 'Syncing with Google Sheets...';
-    const res = await fetch(APPS_SCRIPT_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action, data })
+  try{
+    // Start the camera first. Some browsers can show camera preview but do not
+    // implement the native BarcodeDetector API.
+    scanStream=await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:{ideal:'environment'}},audio:false
     });
-    const json = await res.json();
-    if (json.status !== 'ok') throw new Error(json.message);
-    $('syncStatus').textContent = 'Synced with Google Sheets';
-    return json.data;
-  } catch (err) {
-    console.warn('Cloud sync warning:', err);
-    $('syncStatus').textContent = 'Saved locally (offline / sync error)';
-    return null;
-  }
-}
+    const video=$('scanVideo');
+    video.srcObject=scanStream;
+    video.style.display='block';
+    await video.play();
 
-async function initialCloudLoad() {
-  const remote = await apiPost('getAllData');
-  if (remote && Array.isArray(remote.foods)) {
-    if (remote.foods.length > 0) state.foods = remote.foods;
-    if (Array.isArray(remote.logs)) state.logs = remote.logs;
-    if (remote.targets) state.targets = remote.targets;
-    saveLocalState();
-    $('targetCal').value = state.targets.calories || 1800;
-    $('targetPro').value = state.targets.protein || 120;
-    render();
-  }
-}
+    if(!('BarcodeDetector' in window)){
+      scanActive=false;
+      $('scanStatus').textContent='Camera is on, but this browser does not support automatic barcode reading. Enter the JAN/EAN number below, or open this page in a supported Android Chrome browser.';
+      return;
+    }
 
-function render() {
-  const date = $('logDate').value;
-  // Populate food dropdown
-  const select = $('foodSelect');
-  select.innerHTML = '';
-  state.foods.forEach(f => {
-    const opt = document.createElement('option');
-    opt.value = f.id;
-    opt.textContent = `${f.name}${f.brand ? ' (' + f.brand + ')' : ''} - ${f.calories} kcal / ${f.servingAmount}${f.unit}`;
-select.appendChild(opt);
-});
-// Render logs for selected date
-const dayLogs = state.logs.filter(l => l.date === date);
-const logsDiv = $('todayLogs');
-logsDiv.innerHTML = dayLogs.length ? '' : 'No foods logged for this date yet.';
-let cal = 0, pro = 0, carb = 0, fat = 0;
-dayLogs.forEach(item => {
-cal += Number(item.calories) || 0;
-pro += Number(item.protein) || 0;
-carb += Number(item.carbs) || 0;
-fat += Number(item.fat) || 0;
-const row = document.createElement('div');
-row.className = 'list-item';
-row.innerHTML = <div> <span class="badge">${item.meal}</span> <b>${item.foodName}</b> × ${item.servings} <div class="tiny">${Math.round(item.calories)} kcal | P: ${Number(item.protein).toFixed(1)}g | C: ${Number(item.carbs).toFixed(1)}g | F: ${Number(item.fat).toFixed(1)}g</div> </div> <button class="danger" type="button">Delete</button>;
-row.querySelector('button').onclick = async () => {
-state.logs = state.logs.filter(x => x.id !== item.id);
-saveLocalState();
-render();
-await apiPost('deleteLog', { id: item.id });
+    let detector;
+    try{
+      const formats=['ean_13','ean_8','upc_a','upc_e','code_128'];
+      const supported=BarcodeDetector.getSupportedFormats
+        ? await BarcodeDetector.getSupportedFormats() : formats;
+      const usable=formats.filter(f=>supported.includes(f));
+      if(!usable.length)throw new Error('No compatible barcode formats');
+      detector=new BarcodeDetector({formats:usable});
+    }catch(detectorError){
+      $('scanStatus').textContent='Camera is on, but automatic JAN/EAN scanning is not supported by this browser. Enter the barcode number below.';
+      return;
+    }
+
+    scanActive=true;
+    $('scanStatus').textContent='Camera is on. Point the rear camera at the barcode and hold it steady.';
+    const tick=async()=>{
+      if(!scanActive||scanBusy)return;
+      try{
+        if(video.readyState>=2){
+          const codes=await detector.detect(video);
+          if(codes.length&&codes[0].rawValue){
+            scanBusy=true;
+            const code=codes[0].rawValue;
+            $('barcodeInput').value=code;
+            $('scanStatus').textContent='Barcode detected. Looking up product…';
+            stopScanner();
+            await lookupBarcode(code);
+            scanBusy=false;
+            return;
+          }
+        }
+      }catch(err){
+        $('scanStatus').textContent='Camera is active, but the barcode could not be read. Try brighter light and hold the barcode steady.';
+      }
+      if(scanActive)scanFrame=requestAnimationFrame(tick);
+    };
+    scanFrame=requestAnimationFrame(tick);
+  }catch(err){
+    stopScanner();
+    let msg='Could not start the camera.';
+    if(err.name==='NotAllowedError'||err.name==='PermissionDeniedError')
+      msg='Camera permission was denied. Allow camera access for this website in your browser settings, then try again.';
+    else if(err.name==='NotFoundError'||err.name==='DevicesNotFoundError')
+      msg='No camera was found on this device.';
+    else if(err.name==='NotReadableError'||err.name==='TrackStartError')
+      msg='The camera is already being used by another app. Close other camera apps and try again.';
+    else if(err.name==='SecurityError'||!window.isSecureContext)
+      msg='Camera access requires a secure HTTPS page. Open this tracker from an HTTPS website rather than a local file or preview.';
+    $('scanStatus').textContent=msg+' You can still enter the barcode manually.';
+  }
 };
-logsDiv.appendChild(row);
-});
-$('sumCal').textContent = Math.round(cal);
-$('sumPro').textContent = ${pro.toFixed(1)}g;
-$('sumCarb').textContent = ${carb.toFixed(1)}g;
-$('sumFat').textContent = ${fat.toFixed(1)}g;
-const pct = Math.min(100, Math.round((cal / (state.targets.calories || 1800)) * 100));
-$('calBar').style.width = ${pct}%;
+$('scanClose').onclick=closeScanner;
+async function lookupBarcode(raw){
+  const code=String(raw||'').replace(/\D/g,'');
+  if(code.length<8||code.length>14){$('scanStatus').textContent='Enter a valid barcode number (8–14 digits).';return}
+  $('barcodeLookup').disabled=true;$('scanStatus').textContent='Searching product database…';
+  try{
+    const url='https://world.openfoodfacts.org/api/v2/product/'+encodeURIComponent(code)+'.json?fields=code,product_name,product_name_en,brands,quantity,serving_size,nutriments';
+    const response=await fetch(url,{headers:{Accept:'application/json'}});
+    if(!response.ok)throw new Error('Network error');
+    const data=await response.json();
+    if(data.status!==1||!data.product)throw new Error('Product not found');
+    const p=data.product,n=p.nutriments||{};
+    let baseKcal=Number(n['energy-kcal_100g']);
+    if(!Number.isFinite(baseKcal)||baseKcal<=0){
+      const kj=Number(n['energy_100g']);baseKcal=Number.isFinite(kj)&&kj>0?kj/4.184:NaN;
+    }
+    const baseProtein=Number(n.proteins_100g),baseCarbs=Number(n.carbohydrates_100g),baseFat=Number(n.fat_100g);
+    if(!Number.isFinite(baseKcal)&&!Number.isFinite(baseProtein)&&!Number.isFinite(baseCarbs)&&!Number.isFinite(baseFat))
+      throw new Error('Product found, but nutrition values are missing');
+    const serving=String(p.serving_size||'');
+    const match=serving.match(/(\d+(?:[.,]\d+)?)\s*(g|ml)\b/i);
+    const amount=match?Number(match[1].replace(',','.')):100;
+    const unit=match?match[2].toLowerCase():'g';
+    const factor=amount/100;
+    const safe=v=>Number.isFinite(v)?fmt(v*factor):0;
+    const name=p.product_name||p.product_name_en||('Scanned product '+code);
+    const brand=p.brands||'Brand not listed';
+    const existing=s.foods.find(f=>f.barcode===code);
+    let food;
+    if(existing){
+      food=existing;
+      food.name=name;food.brand=brand;food.amount=amount;food.unit=unit;
+      food.kcal=safe(baseKcal);food.protein=safe(baseProtein);food.carbs=safe(baseCarbs);food.fat=safe(baseFat);
+      food.source='Open Food Facts · verify package label';
+    }else{
+      food={id:'barcode'+code,name,brand,category:$('meal').value,amount,unit,kcal:safe(baseKcal),protein:safe(baseProtein),carbs:safe(baseCarbs),fat:safe(baseFat),barcode:code,source:'Open Food Facts · verify package label'};
+      s.foods.push(food);
+    }
+    $('search').value='';$('qty').value=1;
+    persist();
+    $('food').value=food.id;
+    $('scanStatus').textContent='Added to your food database: '+name+'. Check the serving and nutrition against the package before logging.';
+    $('barcodeInput').value=code;
+  }catch(err){
+    $('scanStatus').textContent=err.message==='Product not found'
+      ?'No product record found for this barcode. Try entering it again, or add the food manually using the package label.'
+      :err.message==='Product found, but nutrition values are missing'
+        ?'Product record found, but nutrition values are missing. Add the nutrition from the package label manually.'
+        :'Could not retrieve the product. Check your internet connection and try again.';
+  }finally{$('barcodeLookup').disabled=false}
 }
-// Event Listeners: Targets, Log, Save Food
-$('logDate').onchange = render;
-$('saveTargetsBtn').onclick = async () => {
-state.targets = {
-calories: Number($('targetCal').value) || 1800,
-protein: Number($('targetPro').value) || 120
-};
-saveLocalState();
-render();
-await apiPost('saveTargets', state.targets);
-};
-$('addLogBtn').onclick = async () => {
-const food = state.foods.find(f => f.id === $('foodSelect').value);
-if (!food) return alert('Please add or select a food first.');
-const servings = Number($('servingsInput').value) || 1;
-const entry = {
-id: 'log_' + Date.now(),
-date: $('logDate').value,
-meal: $('mealSelect').value,
-foodId: food.id,
-foodName: food.name,
-brand: food.brand || '',
-servings,
-calories: Math.round(food.calories * servings),
-protein: Number((food.protein * servings).toFixed(1)),
-carbs: Number((food.carbs * servings).toFixed(1)),
-fat: Number((food.fat * servings).toFixed(1))
-};
-state.logs.push(entry);
-saveLocalState();
-render();
-await apiPost('addLog', entry);
-};
-$('saveFoodBtn').onclick = async () => {
-const name = $('fName').value.trim();
-if (!name) return alert('Please enter a food name.');
-const food = {
-id: 'food_' + Date.now(),
-name,
-brand: $('fBrand').value.trim(),
-barcode: $('fBarcode').value.trim(),
-servingAmount: Number($('fServing').value) || 100,
-unit: $('fUnit').value.trim() || 'g',
-calories: Number($('fCal').value) || 0,
-protein: Number($('fPro').value) || 0,
-carbs: Number($('fCarb').value) || 0,
-fat: Number($('fFat').value) || 0
-};
-state.foods.unshift(food);
-saveLocalState();
-render();
-$('foodSelect').value = food.id;
-['fName', 'fBrand', 'fBarcode'].forEach(id => $(id).value = '');
-await apiPost('saveFood', food);
-alert('Food saved!');
-};
-// Barcode Camera & Lookup
-let scanStream = null, scanTimer = null;
-function stopScanner() {
-if (scanTimer) { clearInterval(scanTimer); scanTimer = null; }
-if (scanStream) { scanStream.getTracks().forEach(t => t.stop()); scanStream = null; }
-$('scanVideo').style.display = 'none';
-}
-$('scanOpen').onclick = () => $('scannerPanel').classList.remove('hidden');
-$('scanClose').onclick = () => { stopScanner(); $('scannerPanel').classList.add('hidden'); };
-$('startCamBtn').onclick = async () => {
-try {
-stopScanner();
-scanStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
-const video = $('scanVideo');
-video.srcObject = scanStream;
-video.style.display = 'block';
-await video.play();
-$('scanStatus').textContent = 'Point camera at barcode...';
-if ('BarcodeDetector' in window) {
-const detector = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128'] });
-scanTimer = setInterval(async () => {
-try {
-const codes = await detector.detect(video);
-if (codes.length > 0) {
-const code = codes[0].rawValue;
-$('barcodeInput').value = code;
-stopScanner();
-lookupBarcode(code);
-}
-} catch {}
-}, 400);
-} else {
-$('scanStatus').textContent = 'Live auto-detect not supported on this browser—enter barcode below or snap the nutrition label.';
-}
-} catch (err) {
-$('scanStatus').textContent = 'Camera blocked or unavailable: ' + err.message;
-}
-};
-async function lookupBarcode(rawCode) {
-const code = String(rawCode || '').trim();
-if (!code) return;
-$('barcodeLookup').disabled = true;
-$('scanStatus').textContent = Looking up ${code}...;
-$('fBarcode').value = code;
-// 1. Check saved foods first
-const existing = state.foods.find(f => String(f.barcode) === code);
-if (existing) {
-$('foodSelect').value = existing.id;
-$('scanStatus').textContent = Found in your saved foods: ${existing.name};
-$('barcodeLookup').disabled = false;
-return;
-}
-// 2. Query Open Food Facts v2 API
-try {
-const res = await fetch(https://openfoodfacts.org{encodeURIComponent(code)}.json?fields=product_name,brands,nutriments);
-const data = await res.json();
-if (data.status === 1 && data.product) {
-const p = data.product;
-const n = p.nutriments || {};
-$('fName').value = p.product_name || '';
-$('fBrand').value = p.brands || '';
-$('fServing').value = 100;
-$('fUnit').value = 'g';
-$('fCal').value = Math.round(n['energy-kcal_100g'] || n['energy-kcal'] || 0);
-$('fPro').value = Number((n.proteins_100g || n.proteins || 0).toFixed(1));
-$('fCarb').value = Number((n.carbohydrates_100g || n.carbohydrates || 0).toFixed(1));
-$('fFat').value = Number((n.fat_100g || n.fat || 0).toFixed(1));
-$('scanStatus').textContent = 'Product loaded into form below! Review and click "Save Food to Database".';
-} else {
-$('scanStatus').textContent = 'Barcode not in online database. Tap "📷 Scan Nutrition Label" to fill from photo!';
-}
-} catch {
-$('scanStatus').textContent = 'Could not retrieve the product. Check your internet connection or scan the nutrition label.';
-} finally {
-$('barcodeLookup').disabled = false;
-}
-}
-$('barcodeLookup').onclick = () => lookupBarcode($('barcodeInput').value);
-$('barcodeInput').addEventListener('keydown', e => { if (e.key === 'Enter') lookupBarcode($('barcodeInput').value); });
-window.addEventListener('pagehide', stopScanner);
-// Photo Nutrition Label Scanner (via Code.gs Gemini Vision)
-$('label-photo-input').addEventListener('change', async (e) => {
-const file = e.target.files[0];
-if (!file) return;
-$('scanStatus').textContent = 'Reading nutrition label photo with AI...';
-try {
-const { base64, mimeType } = await compressImageToBase64(file, 1024);
-const res = await fetch(APPS_SCRIPT_URL, {
-method: 'POST',
-headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-body: JSON.stringify({
-action: 'scanLabel',
-data: { imageBase64: base64, mimeType }
-})
-});
-const result = await res.json();
-if (result.status !== 'ok') throw new Error(result.message);
-const item = result.data;
-if (item.name) $('fName').value = item.name;
-$('fServing').value = item.servingAmount || 1;
-$('fUnit').value = item.unit || 'serving';
-$('fCal').value = Math.round(item.calories || 0);
-$('fPro').value = Number(item.protein || 0);
-$('fCarb').value = Number(item.carbs || 0);
-$('fFat').value = Number(item.fat || 0);
-$('scanStatus').textContent = 'Nutrition label extracted! Verify the numbers below and click "Save Food to Database".';
-} catch (err) {
-$('scanStatus').textContent = 'Label scan failed: ' + err.message;
-alert('Label scan failed: ' + err.message);
-} finally {
-e.target.value = '';
-}
-});
-function compressImageToBase64(file, maxWidth) {
-return new Promise((resolve, reject) => {
-const reader = new FileReader();
-reader.onload = (event) => {
-const img = new Image();
-img.onload = () => {
-const scale = Math.min(1, maxWidth / img.width);
-const canvas = document.createElement('canvas');
-canvas.width = img.width * scale;
-canvas.height = img.height * scale;
-canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-resolve({ base64: dataUrl.split(',')[1], mimeType: 'image/jpeg' });
-};
-img.onerror = reject;
-img.src = event.target.result;
-};
-reader.onerror = reject;
-reader.readAsDataURL(file);
-});
-}
-// Initialize UI
-$('targetCal').value = state.targets.calories || 1800;
-$('targetPro').value = state.targets.protein || 120;
-render();
-initialCloudLoad();
+$('barcodeLookup').onclick=()=>lookupBarcode($('barcodeInput').value);
+$('barcodeInput').addEventListener('keydown',e=>{if(e.key==='Enter')lookupBarcode($('barcodeInput').value)});
+window.addEventListener('pagehide',stopScanner);
 
-```javascript
-const SHEETS = {
-  LOGS: 'FoodLogs',
-  DB: 'FoodDatabase',
-  SETTINGS: 'Settings'
-};
-
-function doGet(e) {
-  if (e && e.parameter && e.parameter.action) {
-    return handleApiRequest(e.parameter.action, e.parameter);
-  }
-  return ContentService.createTextOutput(JSON.stringify({ status: 'ok', message: 'Calorie Tracker API running' }))
-    .setMimeType(ContentService.MimeType.JSON);
-}
-
-function doPost(e) {
-  try {
-    const payload = JSON.parse(e.postData.contents);
-    const result = handleApiRequest(payload.action, payload.data || {});
-    return ContentService.createTextOutput(JSON.stringify({ status: 'ok', data: result }))
-      .setMimeType(ContentService.MimeType.JSON);
-  } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({ status: 'error', message: err.message }))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-}
-
-function handleApiRequest(action, data) {
-  setupSheetsIfNeeded();
-
-  switch (action) {
-    case 'getAllData':
-      return getAllData();
-    case 'addLog':
-      return addLogEntry(data);
-    case 'deleteLog':
-      return deleteLogEntry(data.id);
-    case 'saveFood':
-      return saveFoodItem(data);
-    case 'deleteFood':
-      return deleteFoodItem(data.id);
-    case 'saveTargets':
-      return saveTargets(data.calories, data.protein);
-    case 'scanLabel':
-      return scanNutritionLabel(data.imageBase64, data.mimeType);
-    default:
-      throw new Error('Unknown action: ' + action);
-  }
-}
-
-function setupSheetsIfNeeded() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-
-  let logSheet = ss.getSheetByName(SHEETS.LOGS);
-  if (!logSheet) {
-    logSheet = ss.insertSheet(SHEETS.LOGS);
-    logSheet.appendRow(['id', 'date', 'meal', 'foodId', 'foodName', 'brand', 'servings', 'calories', 'protein', 'carbs', 'fat', 'createdAt']);
-    logSheet.setFrozenRows(1);
-  }
-
-  let dbSheet = ss.getSheetByName(SHEETS.DB);
-  if (!dbSheet) {
-    dbSheet = ss.insertSheet(SHEETS.DB);
-    dbSheet.appendRow(['id', 'name', 'brand', 'category', 'servingAmount', 'unit', 'calories', 'protein', 'carbs', 'fat', 'barcode']);
-    dbSheet.setFrozenRows(1);
-  }
-
-  let settingsSheet = ss.getSheetByName(SHEETS.SETTINGS);
-  if (!settingsSheet) {
-    settingsSheet = ss.insertSheet(SHEETS.SETTINGS);
-    settingsSheet.appendRow(['key', 'value']);
-    settingsSheet.appendRow(['calorieTarget', 1800]);
-    settingsSheet.appendRow(['proteinTarget', 120]);
-    settingsSheet.setFrozenRows(1);
-  }
-}
-
-function getAllData() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  return {
-    logs: sheetToObjects(ss.getSheetByName(SHEETS.LOGS)),
-    foods: sheetToObjects(ss.getSheetByName(SHEETS.DB)),
-    targets: getTargets()
-  };
-}
-
-function addLogEntry(entry) {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEETS.LOGS);
-  const id = entry.id || Utilities.getUuid();
-  const createdAt = new Date().toISOString();
-  sheet.appendRow([
-    id, entry.date, entry.meal, entry.foodId || '', entry.foodName, entry.brand || '',
-    Number(entry.servings) || 1, Number(entry.calories) || 0, Number(entry.protein) || 0,
-    Number(entry.carbs) || 0, Number(entry.fat) || 0, createdAt
-  ]);
-  return { ...entry, id, createdAt };
-}
-
-function deleteLogEntry(id) {
-  return deleteRowById(SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEETS.LOGS), id);
-}
-
-function saveFoodItem(food) {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEETS.DB);
-  const id = food.id || Utilities.getUuid();
-  const rowValues = [
-    id, food.name, food.brand || '', food.category || 'Other',
-    Number(food.servingAmount) || 100, food.unit || 'g',
-    Number(food.calories) || 0, Number(food.protein) || 0,
-    Number(food.carbs) || 0, Number(food.fat) || 0, food.barcode || ''
-  ];
-  const rowIndex = findRowIndexById(sheet, id);
-  if (rowIndex > 1) {
-    sheet.getRange(rowIndex, 1, 1, rowValues.length).setValues([rowValues]);
-  } else {
-    sheet.appendRow(rowValues);
-  }
-  return { ...food, id };
-}
-
-function deleteFoodItem(id) {
-  return deleteRowById(SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEETS.DB), id);
-}
-
-function getTargets() {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEETS.SETTINGS);
-  const data = sheet.getDataRange().getValues();
-  const targets = { calories: 1800, protein: 120 };
-  for (let i = 1; i < data.length; i++) {
-    if (data[i][0] === 'calorieTarget') targets.calories = Number(data[i][1]) || 1800;
-    if (data[i][0] === 'proteinTarget') targets.protein = Number(data[i][1]) || 120;
-  }
-  return targets;
-}
-
-function saveTargets(calories, protein) {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEETS.SETTINGS);
-  const data = sheet.getDataRange().getValues();
-  for (let i = 1; i < data.length; i++) {
-    if (data[i][0] === 'calorieTarget') sheet.getRange(i + 1, 2).setValue(Number(calories) || 1800);
-    if (data[i][0] === 'proteinTarget') sheet.getRange(i + 1, 2).setValue(Number(protein) || 120);
-  }
-  return { calories: Number(calories), protein: Number(protein) };
-}
-
-function scanNutritionLabel(imageBase64, mimeType) {
-  const apiKey = PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY');
-  if (!apiKey) throw new Error('GEMINI_API_KEY is not set in Script Properties.');
-
-  const url = 'https://googleapis.com';
-  const prompt = [
-    'Extract nutrition facts from this product label image (supports English and Japanese 栄養成分表示).',
-    'Return ONLY valid JSON with these exact keys:',
-    '{ "name": string, "servingAmount": number, "unit": string, "calories": number, "protein": number, "carbs": number, "fat": number }.',
-    'If a value is missing, use 0. Round calories to a whole number and macros to 1 decimal place.'
-  ].join(' ');
-
-  const payload = {
-    contents: [{
-      parts: [
-        { text: prompt },
-        { inline_data: { mime_type: mimeType || 'image/jpeg', data: imageBase64 } }
-      ]
-    }],
-    generationConfig: { responseMimeType: 'application/json', temperature: 0.1 }
-  };
-
-  const response = UrlFetchApp.fetch(url, {
-    method: 'post',
-    contentType: 'application/json',
-    headers: { 'x-goog-api-key': apiKey },
-    payload: JSON.stringify(payload),
-    muteHttpExceptions: true
-  });
-
-  const json = JSON.parse(response.getContentText());
-  if (response.getResponseCode() !== 200) {
-    throw new Error(json.error ? json.error.message : 'Gemini API error');
-  }
-
-  return JSON.parse(json.candidates[0].content.parts[0].text);
-}
-
-function sheetToObjects(sheet) {
-  const values = sheet.getDataRange().getValues();
-  if (values.length <= 1) return [];
-  const headers = values[0];
-  return values.slice(1).map(row => {
-    const obj = {};
-    headers.forEach((header, idx) => {
-      let val = row[idx];
-      if (val instanceof Date) val = Utilities.formatDate(val, Session.getScriptTimeZone(), 'yyyy-MM-dd');
-      obj[header] = val;
-    });
-    return obj;
-  });
-}
-
-function findRowIndexById(sheet, id) {
-  const data = sheet.getDataRange().getValues();
-  for (let i = 1; i < data.length; i++) {
-    if (String(data[i][0]) === String(id)) return i + 1;
-  }
-  return -1;
-}
-
-function deleteRowById(sheet, id) {
-  const rowIndex = findRowIndexById(sheet, id);
-  if (rowIndex > 1) { sheet.deleteRow(rowIndex); return true; }
-  return false;
-}  
-<script>
-<body/>
-<html/>
+$('targetCal').value=s.targets.calories||1500;$('targetPro').value=s.targets.protein||100;render();
+</script></body></html>
