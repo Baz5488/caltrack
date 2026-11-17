@@ -32,6 +32,7 @@
 }
 #scanVideo{width:100%}#scannerPanel .row{align-items:end}@media(max-width:700px){#scannerPanel .row{flex-direction:column;align-items:stretch}#scannerPanel .row button{width:100%}}.chartgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.chartbox{min-width:0;border:1px solid #e2eae4;border-radius:10px;padding:12px;background:#fbfdfb}.chartbox h3{font-size:15px;margin:0 0 8px}.chartbox svg{display:block;width:100%;height:auto;overflow:visible}.chartlegend{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;font-size:12px;color:#607166;margin-top:4px}.chartlegend span{display:inline-flex;align-items:center;gap:6px}.legendbar{display:inline-block;width:12px;height:12px;border-radius:3px}.callegend{background:#258653}.prolegend{background:#287f9d}.legendline{display:inline-block;width:18px;border-top:2px dashed #b47a24}@media(max-width:700px){.chartgrid{grid-template-columns:1fr}.chartbox{padding:10px}}
 
+main{grid-template-columns:minmax(0,1fr)}.filelabel.secondary{background:#e8efea;color:#244333}
 </style></head><body>
 <header><h1 style="margin:0">Personal Calorie Tracker</h1><div>Your everyday foods · calories · protein · nutrition history</div></header>
 <main>
@@ -41,7 +42,7 @@
 <div class="metric"><small>CARBS / FAT</small><div class="big" id="macros">0 g / 0 g</div><small>Estimated logged totals</small></div>
 </section>
 <section class="panel"><div class="row" style="justify-content:space-between"><h2>Daily food log</h2><div class="field" style="max-width:180px"><label>Date</label><input id="date" type="date"></div></div>
-<div class="row" style="margin:10px 0"><button id="scanOpen" type="button">▦ Scan product barcode</button><span class="tiny">Scan EAN / JAN barcodes, or enter the number manually.</span></div>
+<div class="row" style="margin:10px 0"><button id="scanOpen" type="button">▦ Scan product barcode</button><label class="filelabel">📷 Photo of barcode or label<input id="photoInput" type="file" accept="image/*" hidden></label><span class="tiny">Scan live, or snap / choose a photo of the barcode or the nutrition label (栄養成分表示).</span></div>
 <div id="scannerPanel" class="hidden" style="border:1px solid #dce6df;background:#f7faf8;border-radius:10px;padding:12px;margin:10px 0">
   <div class="row" style="justify-content:space-between"><b>Barcode lookup</b><button id="scanClose" class="secondary" type="button">Close</button></div>
   <video id="scanVideo" playsinline muted style="display:none;width:100%;max-height:260px;object-fit:cover;border-radius:8px;background:#17251d;margin:8px 0"></video>
@@ -53,7 +54,7 @@
 <p class="notice">Serving multiplier: 0.5 = half a serving; for 10 g nuts when the database serving is 30 g, enter 0.33.</p><div id="log"></div></section>
 <section class="panel" id="weeklyProgress"><h2>Weekly progress · last 7 days</h2><p class="tiny">The week ends on the date selected above. Dashed line = daily target; bars = actual intake. Days with no entries are shown as zero.</p><div class="chartgrid"><div class="chartbox"><h3>Calories (kcal)</h3><div id="calChart"></div><div class="chartlegend"><span><i class="legendbar callegend"></i>Actual</span><span><i class="legendline"></i>Target</span></div></div><div class="chartbox"><h3>Protein (g)</h3><div id="proChart"></div><div class="chartlegend"><span><i class="legendbar prolegend"></i>Actual</span><span><i class="legendline"></i>Target</span></div></div></div></section>
 <section class="panel"><div class="row" style="justify-content:space-between"><h2>Food database</h2><div class="row"><button class="secondary" id="new">+ Add food</button><button class="secondary" id="csv">Export CSV</button><button class="secondary" id="backup">Backup JSON</button><label class="filelabel">Import JSON<input id="import" type="file" accept=".json" hidden></label></div></div>
-<div id="editor" class="hidden" style="background:#f6faf7;padding:12px;border-radius:9px"><h3 id="editTitle">Add food</h3><div class="formgrid">
+<div id="editor" class="hidden" style="background:#f6faf7;padding:12px;border-radius:9px"><h3 id="editTitle">Add food</h3><div class="row" style="margin-bottom:10px"><label class="filelabel secondary">📷 Fill values from a label photo<input id="labelInput" type="file" accept="image/*" hidden></label><span id="ocrStatus" class="tiny" style="flex:1;min-width:160px"></span></div><div class="formgrid">
 <div class="wide"><label>Food name</label><input id="name"></div><div><label>Brand</label><input id="brand" placeholder="Generic / Meiji"></div><div><label>Category</label><select id="category"><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option><option>Other</option></select></div>
 <div><label>Serving amount</label><input id="amount" type="number" value="100"></div><div><label>Unit</label><select id="unit"><option>g</option><option>ml</option><option>piece</option><option>slice</option><option>tbsp</option><option>tsp</option><option>cup</option></select></div><div><label>Calories kcal</label><input id="kcal" type="number" step=".1"></div><div><label>Protein g</label><input id="protein" type="number" step=".1"></div><div><label>Carbs g</label><input id="carbs" type="number" step=".1"></div><div><label>Fat g</label><input id="fat" type="number" step=".1"></div></div><div class="row" style="justify-content:flex-end;margin-top:10px"><button class="secondary" id="cancel">Cancel</button><button id="save">Save food</button></div></div>
 <div class="row" style="margin-top:12px"><div class="field"><label>Filter database</label><input id="dbsearch" placeholder="Food or brand"></div><div class="field"><label>Category</label><select id="dbcat"><option value="">All</option><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option><option>Other</option></select></div></div><div class="scroll"><table><thead><tr><th>Food / brand</th><th>Serving</th><th class="right">kcal</th><th class="right">Protein</th><th></th></tr></thead><tbody id="foods"></tbody></table></div><p class="tiny">Initial nutrition values are estimates. Edit entries using the package label for your actual Japanese products.</p></section>
@@ -87,9 +88,9 @@ let dbq=$('dbsearch').value.toLowerCase(),cat=$('dbcat').value;$('foods').innerH
 $('foods').querySelectorAll('[data-ed]').forEach(b=>b.onclick=()=>edit(b.dataset.ed));$('foods').querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{if(confirm('Delete this food?')){s.foods=s.foods.filter(f=>f.id!==b.dataset.del);persist()}});
 let dates=Object.keys(s.logs).sort().reverse().filter(d=>s.logs[d].length).slice(0,7);$('history').innerHTML=dates.map(d=>{let a=sum(s.logs[d]);return `<tr><td>${d}</td><td class="right">${fmt(a.kcal)}</td><td class="right">${fmt(a.protein)} g</td><td class="right">${fmt(a.carbs)} g</td><td class="right">${fmt(a.fat)} g</td></tr>`}).join('')||'<tr><td colspan="5">No logged days yet</td></tr>';drawWeeklyChart('calChart','kcal',tc,'kcal','#258653',$('date').value);drawWeeklyChart('proChart','protein',tp,'g','#287f9d',$('date').value)}
 $('add').onclick=()=>{let id=$('food').value,qty=num($('qty').value);if(!id||qty<=0)return;(s.logs[$('date').value]??=[]).push({id,qty,meal:$('meal').value});$('qty').value=1;persist()};$('date').onchange=render;$('search').oninput=render;$('dbsearch').oninput=render;$('dbcat').onchange=render;
-function clear(){['name','brand','kcal','protein','carbs','fat'].forEach(x=>$(x).value='');$('amount').value=100;$('unit').value='g';$('category').value='Other'}
-function edit(id){let f=s.foods.find(x=>x.id===id);if(!f)return;editId=id;pendingBarcode=null;$('editTitle').textContent='Edit food';for(let k of ['name','brand','category','amount','unit','kcal','protein','carbs','fat'])$(k).value=f[k];$('editor').classList.remove('hidden')}
-$('new').onclick=()=>{editId=null;pendingBarcode=null;clear();$('editTitle').textContent='Add food';$('editor').classList.remove('hidden')};$('cancel').onclick=()=>{pendingBarcode=null;$('editor').classList.add('hidden')};
+function clear(){$('ocrStatus').textContent='';['name','brand','kcal','protein','carbs','fat'].forEach(x=>$(x).value='');$('amount').value=100;$('unit').value='g';$('category').value='Other'}
+function edit(id){let f=s.foods.find(x=>x.id===id);if(!f)return;editId=id;pendingBarcode=null;$('ocrStatus').textContent='';$('editTitle').textContent='Edit food';for(let k of ['name','brand','category','amount','unit','kcal','protein','carbs','fat'])$(k).value=f[k];$('editor').classList.remove('hidden')}
+$('new').onclick=()=>{editId=null;pendingBarcode=null;clear();$('editTitle').textContent='Add food';$('editor').classList.remove('hidden')};$('cancel').onclick=()=>{pendingBarcode=null;$('ocrStatus').textContent='';$('editor').classList.add('hidden')};
 $('save').onclick=()=>{let prev=editId?s.foods.find(x=>x.id===editId):null;let f={...(prev||{}),id:editId||'custom'+Date.now(),name:$('name').value.trim(),brand:$('brand').value.trim()||'Generic',category:$('category').value,amount:num($('amount').value),unit:$('unit').value,kcal:num($('kcal').value),protein:num($('protein').value),carbs:num($('carbs').value),fat:num($('fat').value)};if(!f.name||f.amount<=0){alert('Enter a food name and serving amount.');return}if(editId)s.foods=s.foods.map(x=>x.id===editId?f:x);else{if(pendingBarcode){f.barcode=pendingBarcode;f.source='Entered from package label'}s.foods.push(f)}let scanned=!editId&&pendingBarcode;pendingBarcode=null;$('editor').classList.add('hidden');persist();if(scanned){$('search').value='';render();$('food').value=f.id;$('scanStatus').textContent='Saved '+f.name+' with its barcode. It is selected in the food list — set servings and tap Add food.';$('scannerPanel').scrollIntoView({behavior:'smooth',block:'start'})}};
 $('targets').onclick=()=>{s.targets={calories:Math.max(1,num($('targetCal').value)),protein:Math.max(1,num($('targetPro').value))};persist();alert('Targets saved')};
 function dl(name,data,type){let a=document.createElement('a'),u=URL.createObjectURL(new Blob([data],{type}));a.href=u;a.download=name;a.click();URL.revokeObjectURL(u)}
@@ -264,6 +265,118 @@ async function lookupBarcode(raw){
 $('barcodeLookup').onclick=()=>lookupBarcode($('barcodeInput').value);
 $('barcodeInput').addEventListener('keydown',e=>{if(e.key==='Enter')lookupBarcode($('barcodeInput').value)});
 window.addEventListener('pagehide',stopScanner);
+
+// ---- Photo input: read a barcode, or the nutrition label text, from a snapped / chosen photo ----
+function photoStatus(msg){$('scanStatus').textContent=msg;$('ocrStatus').textContent=msg}
+function loadPhoto(file){return new Promise((ok,fail)=>{const u=URL.createObjectURL(file),im=new Image();im.onload=()=>{URL.revokeObjectURL(u);ok(im)};im.onerror=()=>{URL.revokeObjectURL(u);fail(new Error('image'))};im.src=u})}
+// Draws the photo on a canvas, longest side limited to maxSide, optionally rotated by 90°.
+function photoCanvas(im,maxSide,rotate){
+  const k=Math.min(1,maxSide/Math.max(im.naturalWidth,im.naturalHeight)),w=Math.round(im.naturalWidth*k),h=Math.round(im.naturalHeight*k);
+  const cv=document.createElement('canvas'),cx=cv.getContext('2d',{willReadFrequently:true});
+  if(rotate){cv.width=h;cv.height=w;cx.translate(h,0);cx.rotate(Math.PI/2)}else{cv.width=w;cv.height=h}
+  cx.fillStyle='#fff';cx.fillRect(0,0,w,h);cx.drawImage(im,0,0,w,h);return cv;
+}
+async function barcodeFromPhoto(im){
+  const clean=x=>{const c=String(x||'').replace(/\D/g,'');return c.length>=8&&c.length<=14?c:''};
+  if('BarcodeDetector' in window){
+    try{
+      const want=['ean_13','ean_8','upc_a','upc_e'],sup=BarcodeDetector.getSupportedFormats?await BarcodeDetector.getSupportedFormats():want,use=want.filter(f=>sup.includes(f));
+      if(use.length){const found=await new BarcodeDetector({formats:use}).detect(photoCanvas(im,1600,false));for(const f of found){const c=clean(f.rawValue);if(c)return c}}
+    }catch(e){}
+  }
+  if(typeof ZXing==='undefined')return '';
+  const hints=new Map();
+  hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS,[ZXing.BarcodeFormat.EAN_13,ZXing.BarcodeFormat.EAN_8,ZXing.BarcodeFormat.UPC_A,ZXing.BarcodeFormat.UPC_E]);
+  hints.set(ZXing.DecodeHintType.TRY_HARDER,true);
+  const reader=new ZXing.MultiFormatReader();
+  // Printed text can occasionally look like a short barcode, so a number only counts when two differently sized readings agree.
+  const seen={};
+  for(const rot of [false,true])for(const side of [1600,1100,800,500]){
+    try{const c=clean(reader.decode(new ZXing.BinaryBitmap(new ZXing.HybridBinarizer(new ZXing.HTMLCanvasElementLuminanceSource(photoCanvas(im,side,rot)))),hints).getText());if(c&&(seen[c]=(seen[c]||0)+1)>=2)return c}catch(e){}
+    await new Promise(r=>setTimeout(r)); // keep the page responsive between attempts
+  }
+  return '';
+}
+// Text recognition (Tesseract.js) is downloaded only the first time a label photo is read.
+let ocrWorker=null;
+async function getOcrWorker(){
+  if(ocrWorker)return ocrWorker;
+  if(typeof Tesseract==='undefined')await new Promise((ok,fail)=>{const sc=document.createElement('script');sc.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';sc.onload=ok;sc.onerror=()=>fail(new Error('ocr-download'));document.head.appendChild(sc)});
+  ocrWorker=await Tesseract.createWorker(['jpn','eng'],1,{logger:m=>{
+    if(m.status==='recognizing text')photoStatus('Reading the label text… '+Math.round(m.progress*100)+'%');
+    else if(/load|initializ/.test(m.status))photoStatus('Preparing text recognition (first use downloads about 15 MB)… '+Math.round(m.progress*100)+'%');
+  }});
+  return ocrWorker;
+}
+// Extracts nutrition values from recognised label text (Japanese 栄養成分表示 or English).
+function parseLabel(raw){
+  const t=String(raw).normalize('NFKC').replace(/[ \t　]+/g,'').replace(/,(?=\d)/g,'.').toLowerCase();
+  const grab=keys=>{
+    const m=t.match(new RegExp('(?:'+keys+')[^\\d]{0,15}?(\\d+(?:\\.\\d+)?)(.{0,3})'));if(!m)return null;
+    let v=m[1];
+    // "5.2g" is often misread as "5.29": drop that trailing 9 when no unit follows.
+    if(!/^(g|k|m)/.test(m[2])&&/\.\d+9$/.test(v))v=v.slice(0,-1);
+    return Number(v);
+  };
+  let kcal=grab('エネルギー|エネルギ|熱量|カロリー|energy|calories');
+  if(kcal===null){const m=t.match(/(\d+(?:\.\d+)?)k?ca[l1i|]/);if(m)kcal=Number(m[1])}
+  const protein=grab('たんぱく質|たん白質|タンパク質|たんぱく貿|蛋白質|protein');
+  const fat=grab('脂質|脂貿|totalfat|fat');
+  let carbs=grab('炭水化物|炭水化勿|carbohydrates?|carbs');
+  if(carbs===null){const sugar=grab('糖質'),fibre=grab('食物繊維');if(sugar!==null)carbs=fmt(sugar+(fibre||0))}
+  let amount=100,unit='g',servingKnown=true;
+  const m=t.match(/(\d+(?:\.\d+)?)(g|ml)[)\]]?(?:当た?り|あたり|中)/)||t.match(/(?:per|servingsize)[^\d]{0,10}(\d+(?:\.\d+)?)(g|ml)/);
+  if(m){amount=Number(m[1]);unit=m[2]}
+  else if(/(個|袋|本|枚|食|包|粒|切れ|パック|杯|缶|箱)分?[)\]]?(当た?り|あたり)/.test(t)){amount=1;unit='piece'}
+  else servingKnown=false;
+  return {kcal,protein,fat,carbs,amount,unit,servingKnown,found:[kcal,protein,fat,carbs].filter(x=>x!==null).length};
+}
+async function labelFromPhoto(im){
+  const worker=await getOcrWorker();
+  // Enlarge small photos: text recognition works best when label characters are 30+ px tall.
+  const cv=photoCanvas(im,2000,false);
+  const {data}=await worker.recognize(cv);
+  return parseLabel(data.text||'');
+}
+let photoBusy=false;
+// mode 'auto': try barcode first, then the nutrition label. mode 'label': nutrition label only.
+async function handlePhoto(file,mode){
+  if(!file||photoBusy)return;
+  photoBusy=true;
+  try{
+    if(mode==='auto'){stopScanner();$('scannerPanel').classList.remove('hidden')}
+    photoStatus('Opening photo…');
+    let im;try{im=await loadPhoto(file)}catch(e){photoStatus('This photo could not be opened. Try taking it again as a normal JPEG photo.');return}
+    if(mode==='auto'){
+      photoStatus('Looking for a barcode in the photo…');
+      const code=await barcodeFromPhoto(im);
+      if(code){$('barcodeInput').value=code;await lookupBarcode(code);return}
+    }
+    photoStatus(mode==='auto'?'No barcode found in the photo — reading it as a nutrition label instead…':'Reading the label text…');
+    let r;
+    try{r=await labelFromPhoto(im)}catch(e){
+      ocrWorker=null;
+      photoStatus('Text recognition could not be loaded. It needs an internet connection the first time. Check the connection and try again, or type the label values in.');return;
+    }
+    if(r.found<2){
+      photoStatus((mode==='auto'?'No barcode and no nutrition table could be read from this photo. ':'The nutrition table could not be read from this photo. ')+'Tips: fill the frame with just the barcode or just the 栄養成分表示 table, keep it flat and sharp, and avoid glare.');return;
+    }
+    // Fill the food form. If it is already open (e.g. for a scanned barcode not in the database) keep name, brand and barcode.
+    if($('editor').classList.contains('hidden')){editId=null;pendingBarcode=null;clear();$('editTitle').textContent='Add food from label photo';$('category').value=$('meal').value;$('editor').classList.remove('hidden')}
+    const set=(id,v)=>{if(v!==null)$(id).value=v};
+    set('kcal',r.kcal);set('protein',r.protein);set('carbs',r.carbs);set('fat',r.fat);
+    $('amount').value=r.amount;$('unit').value=r.unit;
+    const missing=[['calories',r.kcal],['protein',r.protein],['carbs',r.carbs],['fat',r.fat]].filter(x=>x[1]===null).map(x=>x[0]);
+    photoStatus('Label read: '+(r.kcal??'?')+' kcal · protein '+(r.protein??'?')+' g · carbs '+(r.carbs??'?')+' g · fat '+(r.fat??'?')+' g per '+r.amount+' '+r.unit+'.'
+      +(missing.length?' Could not read: '+missing.join(', ')+'.':'')
+      +(r.servingKnown?'':' The serving size was not found — set it yourself.')
+      +' Photo reading makes mistakes: compare every number with the package'+($('name').value?'':', enter the food name')+', then tap Save food.');
+    $('editor').scrollIntoView({behavior:'smooth',block:'start'});
+  }catch(e){photoStatus('Something went wrong while reading the photo. Please try again.')}
+  finally{photoBusy=false}
+}
+$('photoInput').onchange=e=>{const f=e.target.files[0];e.target.value='';handlePhoto(f,'auto')};
+$('labelInput').onchange=e=>{const f=e.target.files[0];e.target.value='';handlePhoto(f,'label')};
 
 $('targetCal').value=s.targets.calories||1500;$('targetPro').value=s.targets.protein||100;render();
 </script></body></html>
