@@ -594,7 +594,7 @@ function csvToFoods(text){
     if(!sv){skipped.push(name+' (no serving size)');return}
     name=name.charAt(0).toUpperCase()+name.slice(1);
     if(sv.size&&!name.toLowerCase().includes(sv.size))name+=' ('+sv.size+')';
-    let cat=get(r,ix.cat);cat=cats.find(c=>c.toLowerCase()===cat.toLowerCase())||'Other';
+    let cat=get(r,ix.cat).split(/[,/;、]/)[0].trim();cat=cats.find(c=>c.toLowerCase()===cat.toLowerCase())||'Other';
     const brand=get(r,ix.brand);
     foods.push({name,brand:brand?brand.charAt(0).toUpperCase()+brand.slice(1):'Generic',category:cat,amount:sv.amount,unit:sv.unit,
       kcal:vals[0]??0,protein:vals[1]??0,fat:vals[2]??0,carbs:vals[3]??0});
