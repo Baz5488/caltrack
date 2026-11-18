@@ -32,7 +32,7 @@
 }
 #scanVideo{width:100%}#scannerPanel .row{align-items:end}@media(max-width:700px){#scannerPanel .row{flex-direction:column;align-items:stretch}#scannerPanel .row button{width:100%}}.chartgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.chartbox{min-width:0;border:1px solid #e2eae4;border-radius:10px;padding:12px;background:#fbfdfb}.chartbox h3{font-size:15px;margin:0 0 8px}.chartbox svg{display:block;width:100%;height:auto;overflow:visible}.chartlegend{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;font-size:12px;color:#607166;margin-top:4px}.chartlegend span{display:inline-flex;align-items:center;gap:6px}.legendbar{display:inline-block;width:12px;height:12px;border-radius:3px}.callegend{background:#258653}.prolegend{background:#287f9d}.legendline{display:inline-block;width:18px;border-top:2px dashed #b47a24}@media(max-width:700px){.chartgrid{grid-template-columns:1fr}.chartbox{padding:10px}}
 
-main{grid-template-columns:minmax(0,1fr)}.filelabel.secondary{background:#e8efea;color:#244333}
+main{grid-template-columns:minmax(0,1fr)}.rtgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}.rtcard{border:1px solid #dce6df;border-radius:10px;padding:11px;background:#fbfdfb}.rthead{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.rtbtns{display:flex;gap:6px;margin-top:8px}.rtbtns button{padding:6px 10px;min-height:0;font-size:13px}button.rtsave{padding:4px 9px;min-height:0;font-size:12px;margin-left:6px}@media(max-width:700px){.rtgrid{grid-template-columns:1fr}#rtEditor .row{flex-direction:column}}.filelabel.secondary{background:#e8efea;color:#244333}
 </style></head><body>
 <header><h1 style="margin:0">Personal Calorie Tracker</h1><div>Your everyday foods · calories · protein · nutrition history</div></header>
 <main>
@@ -52,6 +52,14 @@ main{grid-template-columns:minmax(0,1fr)}.filelabel.secondary{background:#e8efea
 </div>
 <div class="row"><div class="field"><label>Search food / brand</label><input id="search" placeholder="e.g. salmon, Meiji"></div><div class="field"><label>Meal</label><select id="meal"><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option></select></div><div class="field" style="flex:2"><label>Food</label><select id="food"></select></div><div class="field"><label>Servings</label><input id="qty" type="number" min=".1" step=".1" value="1"></div><button id="add">Add food</button></div>
 <p class="notice">Serving multiplier: 0.5 = half a serving; for 10 g nuts when the database serving is 30 g, enter 0.33.</p><div id="log"></div></section>
+<section class="panel" id="routines"><div class="row" style="justify-content:space-between"><h2>Routine meals</h2><button class="secondary" id="rtNew" type="button">+ New routine</button></div>
+<p class="tiny">Save the meals you eat often, then log a whole meal with one tap on the date selected above.</p><p id="rtStatus" class="tiny"></p>
+<div id="rtEditor" class="hidden" style="background:#f6faf7;padding:12px;border-radius:9px;margin-bottom:10px"><h3 id="rtTitle" style="margin-top:0">New routine</h3>
+<div class="row"><div class="field" style="flex:2"><label>Routine name</label><input id="rtName" placeholder="e.g. Weekday breakfast"></div><div class="field"><label>Meal</label><select id="rtMeal"><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option></select></div></div>
+<div id="rtItems" class="scroll" style="margin-top:8px"></div>
+<div class="row" style="margin-top:8px"><div class="field"><label>Find food</label><input id="rtFilter" placeholder="Food or brand"></div><div class="field" style="flex:2"><label>Food</label><select id="rtFood"></select></div><div class="field" style="max-width:110px"><label>Servings</label><input id="rtQty" type="number" min=".1" step=".1" value="1"></div><button class="secondary" id="rtAddItem" type="button">Add to routine</button></div>
+<div class="row" style="justify-content:flex-end;margin-top:10px"><button class="secondary" id="rtCancel" type="button">Cancel</button><button id="rtSave" type="button">Save routine</button></div></div>
+<div id="rtList" class="rtgrid"></div></section>
 <section class="panel" id="weeklyProgress"><h2>Weekly progress · last 7 days</h2><p class="tiny">The week ends on the date selected above. Dashed line = daily target; bars = actual intake. Days with no entries are shown as zero.</p><div class="chartgrid"><div class="chartbox"><h3>Calories (kcal)</h3><div id="calChart"></div><div class="chartlegend"><span><i class="legendbar callegend"></i>Actual</span><span><i class="legendline"></i>Target</span></div></div><div class="chartbox"><h3>Protein (g)</h3><div id="proChart"></div><div class="chartlegend"><span><i class="legendbar prolegend"></i>Actual</span><span><i class="legendline"></i>Target</span></div></div></div></section>
 <section class="panel"><div class="row" style="justify-content:space-between"><h2>Food database</h2><div class="row"><button class="secondary" id="new">+ Add food</button><button class="secondary" id="csv">Export CSV</button><button class="secondary" id="backup">Backup JSON</button><label class="filelabel">Import CSV<input id="importCsv" type="file" accept=".csv,text/csv,text/plain" hidden></label><label class="filelabel">Import JSON<input id="import" type="file" accept=".json" hidden></label></div></div>
 <div id="editor" class="hidden" style="background:#f6faf7;padding:12px;border-radius:9px"><h3 id="editTitle">Add food</h3><div class="row" style="margin-bottom:10px"><label class="filelabel secondary">📷 Fill values from a label photo<input id="labelInput" type="file" accept="image/*" hidden></label><span id="ocrStatus" class="tiny" style="flex:1;min-width:160px"></span></div><div class="formgrid">
@@ -82,7 +90,7 @@ function dateShift(dateText,offset){let [y,m,d]=dateText.split('-').map(Number),
 function drawWeeklyChart(elementId,key,target,unit,color,endDate){let days=Array.from({length:7},(_,i)=>{let date=dateShift(endDate,i-6),items=s.logs[date]||[],value=sum(items)[key];let [y,m,d]=date.split('-').map(Number),dt=new Date(y,m-1,d);return {date,value,day:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][dt.getDay()],label:`${m}/${d}`}});let max=Math.max(target,...days.map(x=>x.value),1)*1.16,W=340,H=174,left=10,right=8,top=18,bottom=138,plotH=bottom-top,base=bottom,step=(W-left-right)/7,barW=20,yTarget=base-(target/max)*plotH;let grid=[0,.5,1].map(r=>{let y=base-r*plotH;return `<line x1="${left}" y1="${y}" x2="${W-right}" y2="${y}" stroke="#e8eee9" stroke-width="1"/><text x="${left}" y="${y-3}" font-size="8" fill="#809087">${Math.round(max*r)}</text>`}).join('');let bars=days.map((d,i)=>{let x=left+step*i+step/2-barW/2,h=Math.max(0,(d.value/max)*plotH),y=base-h;return `<rect x="${x}" y="${y}" width="${barW}" height="${h}" rx="3" fill="${color}" opacity=".9"><title>${d.date}: ${fmt(d.value)} ${unit}</title></rect><text x="${x+barW/2}" y="${Math.max(top-3,y-4)}" text-anchor="middle" font-size="8" fill="#405249">${d.value?fmt(d.value):''}</text><text x="${x+barW/2}" y="154" text-anchor="middle" font-size="9" fill="#52645a">${d.day}</text><text x="${x+barW/2}" y="166" text-anchor="middle" font-size="8" fill="#829087">${d.label}</text>`}).join('');let line=`<line x1="${left}" y1="${yTarget}" x2="${W-right}" y2="${yTarget}" stroke="#b47a24" stroke-width="2" stroke-dasharray="5 4"><title>Daily target: ${target} ${unit}</title></line>`;$(elementId).innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Seven day ${key} chart with target ${target} ${unit}">${grid}${bars}${line}</svg>`}
 function render(){let q=$('search').value.toLowerCase(),matches=s.foods.filter(f=>(f.name+' '+f.brand).toLowerCase().includes(q));$('food').innerHTML=matches.map(f=>`<option value="${f.id}">${esc(f.name)} · ${esc(f.brand)} (${f.amount}${f.unit})</option>`).join('');
 let t=sum(list()),tc=s.targets.calories||1500,tp=s.targets.protein||100;$('cal').textContent=`${fmt(t.kcal)} / ${tc} kcal`;$('pro').textContent=`${fmt(t.protein)} / ${tp} g`;$('macros').textContent=`${fmt(t.carbs)} g / ${fmt(t.fat)} g`;$('calbar').style.width=Math.min(100,t.kcal/tc*100)+'%';$('probar').style.width=Math.min(100,t.protein/tp*100)+'%';$('calleft').textContent=t.kcal<=tc?`${fmt(tc-t.kcal)} kcal remaining`:`${fmt(t.kcal-tc)} kcal over target`;$('proleft').textContent=t.protein>=tp?`${fmt(t.protein-tp)} g above target`:`${fmt(tp-t.protein)} g to target`;
-$('log').innerHTML=['Breakfast','Lunch','Dinner','Snack'].map(m=>{let rows=list().map((e,i)=>({...e,i,f:s.foods.find(f=>f.id===e.id)})).filter(e=>e.meal===m&&e.f),sub=sum(rows);return `<div class="meal"><b>${m}</b> <small>· ${fmt(sub.kcal)} kcal</small>${rows.length?`<table><tbody>${rows.map(e=>`<tr><td>${esc(e.f.name)}<div class="tiny">${esc(e.f.brand)} · ${e.qty} × ${e.f.amount}${e.f.unit}</div></td><td class="right">${fmt(e.f.kcal*e.qty)} kcal</td><td class="right">${fmt(e.f.protein*e.qty)} g</td><td><button class="danger" data-rm="${e.i}">Remove</button></td></tr>`).join('')}</tbody></table>`:'<div class="tiny">No foods logged</div>'}</div>`}).join('');
+$('log').innerHTML=['Breakfast','Lunch','Dinner','Snack'].map(m=>{let rows=list().map((e,i)=>({...e,i,f:s.foods.find(f=>f.id===e.id)})).filter(e=>e.meal===m&&e.f),sub=sum(rows);return `<div class="meal"><b>${m}</b> <small>· ${fmt(sub.kcal)} kcal</small>${rows.length?` <button class="secondary rtsave" data-rtsave="${m}" type="button">Save as routine</button>`:''}${rows.length?`<table><tbody>${rows.map(e=>`<tr><td>${esc(e.f.name)}<div class="tiny">${esc(e.f.brand)} · ${e.qty} × ${e.f.amount}${e.f.unit}</div></td><td class="right">${fmt(e.f.kcal*e.qty)} kcal</td><td class="right">${fmt(e.f.protein*e.qty)} g</td><td><button class="danger" data-rm="${e.i}">Remove</button></td></tr>`).join('')}</tbody></table>`:'<div class="tiny">No foods logged</div>'}</div>`}).join('');
 $('log').querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{list().splice(+b.dataset.rm,1);persist()});
 let dbq=$('dbsearch').value.toLowerCase(),cat=$('dbcat').value;$('foods').innerHTML=s.foods.filter(f=>(f.name+' '+f.brand).toLowerCase().includes(dbq)&&(!cat||f.category===cat)).map(f=>`<tr><td><b>${esc(f.name)}</b><div class="tiny">${esc(f.brand)} · ${f.category}</div></td><td>${f.amount} ${f.unit}</td><td class="right">${fmt(f.kcal)}</td><td class="right">${fmt(f.protein)} g</td><td class="right"><button class="secondary" data-ed="${f.id}">Edit</button> <button class="danger" data-del="${f.id}">Del</button></td></tr>`).join('');
 $('foods').querySelectorAll('[data-ed]').forEach(b=>b.onclick=()=>edit(b.dataset.ed));$('foods').querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{if(confirm('Delete this food?')){s.foods=s.foods.filter(f=>f.id!==b.dataset.del);persist()}});
@@ -96,7 +104,7 @@ $('targets').onclick=()=>{s.targets={calories:Math.max(1,num($('targetCal').valu
 function dl(name,data,type){let a=document.createElement('a'),u=URL.createObjectURL(new Blob([data],{type}));a.href=u;a.download=name;a.click();URL.revokeObjectURL(u)}
 $('backup').onclick=()=>dl('calorie-tracker-backup.json',JSON.stringify(s,null,2),'application/json');
 $('csv').onclick=()=>{let rows=[['Food','Brand','Category','Serving amount','Unit','Calories kcal','Protein g','Carbs g','Fat g'],...s.foods.map(f=>[f.name,f.brand,f.category,f.amount,f.unit,f.kcal,f.protein,f.carbs,f.fat])];dl('food-database.csv',rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n'),'text/csv')};
-$('import').onchange=async e=>{try{let d=JSON.parse(await e.target.files[0].text());if(!Array.isArray(d.foods)||!d.logs)throw 0;if(confirm('Replace current data with this backup?')){s=d;persist()}}catch(x){alert('Invalid tracker backup')}e.target.value=''};
+$('import').onchange=async e=>{try{let d=JSON.parse(await e.target.files[0].text());if(!Array.isArray(d.foods)||!d.logs)throw 0;d.routines??=[];if(confirm('Replace current data with this backup?')){s=d;persist()}}catch(x){alert('Invalid tracker backup')}e.target.value=''};
 
 // Barcode scanning: native BarcodeDetector where it works, bundled ZXing decoder everywhere else
 // (iPhone Safari, Firefox, Android without native support). Lookup: your own database first, then Open Food Facts.
@@ -474,6 +482,81 @@ $('importCsv').onchange=async e=>{
     alert(`Imported ${foods.length} foods.`+(skipped.length?'\n\nSkipped:\n'+skipped.join('\n'):''));
   }catch(err){alert('Could not import this CSV. '+(err.message||''))}
 };
+
+// ---- Routine meals: save a usual breakfast / lunch once, log it with one tap ----
+s.routines??=[];
+let rtEditId=null,rtItems=[];
+const rtTotals=items=>sum(items);
+function rtFoodLabel(f){return `${esc(f.name)} · ${esc(f.brand)} (${f.amount}${f.unit})`}
+function renderRoutines(){
+  s.routines??=[];
+  const list=$('rtList');
+  list.innerHTML=s.routines.length?s.routines.map(r=>{
+    const items=r.items.filter(e=>s.foods.some(f=>f.id===e.id)),t=rtTotals(items);
+    const names=items.map(e=>{const f=s.foods.find(x=>x.id===e.id);return esc(f.name)+(e.qty!==1?' ×'+e.qty:'')}).join(', ');
+    return `<div class="rtcard"><div class="rthead"><div><b>${esc(r.name)}</b> <span class="tiny">${r.meal}</span><div class="tiny">${fmt(t.kcal)} kcal · ${fmt(t.protein)} g protein · ${items.length} items</div></div>
+      <button data-rtadd="${r.id}">+ Log</button></div><div class="tiny" style="margin-top:6px">${names||'No foods'}</div>
+      <div class="rtbtns"><button class="secondary" data-rted="${r.id}">Edit</button><button class="danger" data-rtdel="${r.id}">Delete</button></div></div>`}).join('')
+    :'<p class="tiny">No routine meals yet. Log your usual breakfast once, then tap "Save as routine" next to Breakfast in the log above — or tap "+ New routine".</p>';
+  list.querySelectorAll('[data-rtadd]').forEach(b=>b.onclick=()=>logRoutine(b.dataset.rtadd));
+  list.querySelectorAll('[data-rted]').forEach(b=>b.onclick=()=>openRoutineEditor(s.routines.find(r=>r.id===b.dataset.rted)));
+  list.querySelectorAll('[data-rtdel]').forEach(b=>b.onclick=()=>{const r=s.routines.find(x=>x.id===b.dataset.rtdel);if(r&&confirm('Delete routine "'+r.name+'"? Your logged days are not affected.')){s.routines=s.routines.filter(x=>x!==r);persist()}});
+  $('log').querySelectorAll('[data-rtsave]').forEach(b=>b.onclick=()=>{
+    const meal=b.dataset.rtsave,items=list_().filter(e=>e.meal===meal&&s.foods.some(f=>f.id===e.id)).map(e=>({id:e.id,qty:e.qty}));
+    openRoutineEditor({id:null,name:'My usual '+meal.toLowerCase(),meal,items});
+  });
+  if(!$('rtEditor').classList.contains('hidden'))renderRoutineItems();
+}
+const list_=()=>s.logs[$('date').value]||[];
+function logRoutine(id){
+  const r=s.routines.find(x=>x.id===id);if(!r)return;
+  const items=r.items.filter(e=>s.foods.some(f=>f.id===e.id));if(!items.length)return;
+  const date=$('date').value,day=(s.logs[date]??=[]);
+  if(day.some(e=>e.routine===r.id)&&!confirm('"'+r.name+'" is already logged on '+date+'. Log it again?'))return;
+  items.forEach(e=>day.push({id:e.id,qty:e.qty,meal:r.meal,routine:r.id}));
+  persist();
+  const t=rtTotals(items);
+  $('rtStatus').innerHTML=`Logged <b>${esc(r.name)}</b> to ${r.meal} on ${date} (+${fmt(t.kcal)} kcal). <button class="secondary" id="rtUndo" type="button">Undo</button>`;
+  const before=day.length-items.length;
+  $('rtUndo').onclick=()=>{const d=s.logs[date];if(d&&d.length>=before+items.length){d.splice(before,items.length);persist()}$('rtStatus').textContent='Undone.'};
+}
+function openRoutineEditor(r){
+  rtEditId=r&&r.id||null;rtItems=r?r.items.map(e=>({...e})):[];
+  $('rtName').value=r?r.name:'';$('rtMeal').value=r?r.meal:$('meal').value;
+  $('rtTitle').textContent=rtEditId?'Edit routine':'New routine';
+  $('rtFilter').value='';fillRoutineFoods();renderRoutineItems();
+  $('rtEditor').classList.remove('hidden');$('rtEditor').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function fillRoutineFoods(){
+  const q=$('rtFilter').value.toLowerCase();
+  $('rtFood').innerHTML=s.foods.filter(f=>(f.name+' '+f.brand).toLowerCase().includes(q)).map(f=>`<option value="${f.id}">${rtFoodLabel(f)}</option>`).join('');
+}
+function renderRoutineItems(){
+  rtItems=rtItems.filter(e=>s.foods.some(f=>f.id===e.id));
+  const t=rtTotals(rtItems);
+  $('rtItems').innerHTML=rtItems.length?`<table><tbody>${rtItems.map((e,i)=>{const f=s.foods.find(x=>x.id===e.id);
+    return `<tr><td>${esc(f.name)}<div class="tiny">${esc(f.brand)} · ${f.amount}${f.unit} per serving · ${fmt(f.kcal*e.qty)} kcal</div></td>
+    <td style="width:90px"><input type="number" min=".1" step=".1" value="${e.qty}" data-rtqty="${i}" aria-label="Servings"></td>
+    <td class="right"><button class="danger" data-rtrm="${i}" type="button">Remove</button></td></tr>`}).join('')}</tbody></table>
+    <p class="tiny"><b>Total: ${fmt(t.kcal)} kcal · ${fmt(t.protein)} g protein · ${fmt(t.carbs)} g carbs · ${fmt(t.fat)} g fat</b></p>`
+    :'<p class="tiny">No foods in this routine yet. Pick a food below and tap Add to routine.</p>';
+  $('rtItems').querySelectorAll('[data-rtqty]').forEach(inp=>inp.onchange=()=>{const q=num(inp.value);if(q>0)rtItems[+inp.dataset.rtqty].qty=q;renderRoutineItems()});
+  $('rtItems').querySelectorAll('[data-rtrm]').forEach(b=>b.onclick=()=>{rtItems.splice(+b.dataset.rtrm,1);renderRoutineItems()});
+}
+$('rtNew').onclick=()=>openRoutineEditor(null);
+$('rtFilter').oninput=fillRoutineFoods;
+$('rtAddItem').onclick=()=>{const id=$('rtFood').value,q=num($('rtQty').value);if(!id||q<=0)return;
+  const ex=rtItems.find(e=>e.id===id);if(ex)ex.qty=fmt(ex.qty+q);else rtItems.push({id,qty:q});$('rtQty').value=1;renderRoutineItems()};
+$('rtCancel').onclick=()=>$('rtEditor').classList.add('hidden');
+$('rtSave').onclick=()=>{
+  const name=$('rtName').value.trim();
+  if(!name){alert('Give the routine a name, e.g. "Weekday breakfast".');return}
+  if(!rtItems.length){alert('Add at least one food to the routine.');return}
+  const r={id:rtEditId||'rt'+Date.now(),name,meal:$('rtMeal').value,items:rtItems.map(e=>({id:e.id,qty:e.qty}))};
+  if(rtEditId)s.routines=s.routines.map(x=>x.id===rtEditId?r:x);else s.routines.push(r);
+  $('rtEditor').classList.add('hidden');$('rtStatus').textContent='Saved routine "'+name+'". Tap + Log on any day to add it.';persist();
+};
+{const base=render;render=function(){base();renderRoutines()}}
 
 $('targetCal').value=s.targets.calories||1500;$('targetPro').value=s.targets.protein||100;render();
 </script></body></html>
