@@ -110,6 +110,9 @@ tbody tr:hover{background:#fdf9ff}
 .meal [data-rm]{width:30px;height:30px;min-height:0!important;padding:0!important;font-size:14px;line-height:1}
 .meal .rtsave{font-size:11px!important}
 @media(max-width:700px){.mcal .big,.mpro .big{font-size:16px!important}}
+.hact{white-space:nowrap;text-align:right}.hact button{padding:5px 10px!important;min-height:0!important;font-size:12px;margin-left:4px}
+#toast.actionable{pointer-events:auto;display:flex;align-items:center;gap:10px}
+.toastbtn{background:#fff!important;color:var(--ink)!important;box-shadow:none!important;padding:4px 12px!important;min-height:0!important;font-size:13px}
 
 /* ===== Full-screen scanner ===== */
 body.scanning{overflow:hidden}
@@ -207,7 +210,7 @@ body.scanning{overflow:hidden}
 <div class="wide"><label>Food name</label><input id="name"></div><div><label>Brand</label><input id="brand" placeholder="Generic / Meiji"></div><div><label>Category</label><select id="category"><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option><option>Other</option></select></div>
 <div><label>Serving amount</label><input id="amount" type="number" value="100"></div><div><label>Unit</label><select id="unit"><option>g</option><option>ml</option><option>piece</option><option>slice</option><option>tbsp</option><option>tsp</option><option>cup</option></select></div><div><label>Calories kcal</label><input id="kcal" type="number" step=".1"></div><div><label>Protein g</label><input id="protein" type="number" step=".1"></div><div><label>Carbs g</label><input id="carbs" type="number" step=".1"></div><div><label>Fat g</label><input id="fat" type="number" step=".1"></div></div><div class="row" style="justify-content:flex-end;margin-top:10px"><button class="secondary" id="cancel">Cancel</button><button id="save">Save food</button></div></div>
 <div class="row" style="margin-top:12px"><div class="field"><label>Filter database</label><input id="dbsearch" placeholder="Food or brand"></div><div class="field"><label>Category</label><select id="dbcat"><option value="">All</option><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snack</option><option>Other</option></select></div></div><div class="scroll"><table><thead><tr><th>Food / brand</th><th>Serving</th><th class="right">kcal</th><th class="right">Protein</th><th></th></tr></thead><tbody id="foods"></tbody></table></div><p class="tiny">Initial nutrition values are estimates. Edit entries using the package label for your actual Japanese products.</p></section>
-<section class="panel" data-tab="progress"><h2>Targets & history</h2><div class="row"><div class="field"><label>Daily calorie target</label><input id="targetCal" type="number" value="1500"></div><div class="field"><label>Daily protein target</label><input id="targetPro" type="number" value="100"></div><button id="targets">Save targets</button></div><h3>Last 7 logged days</h3><div class="scroll"><table><thead><tr><th>Date</th><th class="right">Calories</th><th class="right">Protein</th><th class="right">Carbs</th><th class="right">Fat</th></tr></thead><tbody id="history"></tbody></table></div></section>
+<section class="panel" data-tab="progress"><h2>Targets & history</h2><div class="row"><div class="field"><label>Daily calorie target</label><input id="targetCal" type="number" value="1500"></div><div class="field"><label>Daily protein target</label><input id="targetPro" type="number" value="100"></div><button id="targets">Save targets</button></div><h3>Last 7 logged days</h3><div class="scroll"><table><thead><tr><th>Date</th><th class="right">Calories</th><th class="right">Protein</th><th class="right">Carbs</th><th class="right">Fat</th><th></th></tr></thead><tbody id="history"></tbody></table></div></section>
 <section class="panel" id="syncPanel" data-tab="settings"><h2>Google Sheets sync</h2>
 <p class="tiny">Connect every device (phone, PC) to the same Google Sheet to keep the same data everywhere. Changes save automatically; the newest change to each food, routine and log entry wins. Setup: paste the Apps Script code into your sheet (Extensions → Apps Script), set your secret, deploy as a Web app with access "Anyone", then paste the URL and secret here.</p>
 <div class="row"><div class="field" style="flex:3"><label>Web app URL</label><input id="syncUrl" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off"></div><div class="field"><label>Secret</label><input id="syncToken" type="password" autocomplete="off"></div><button id="syncConnect" type="button">Connect &amp; sync</button></div>
@@ -240,7 +243,7 @@ $('log').innerHTML=['Breakfast','Lunch','Dinner','Snack'].map(m=>{let rows=list(
 $('log').querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{list().splice(+b.dataset.rm,1);persist()});
 let dbq=$('dbsearch').value.toLowerCase(),cat=$('dbcat').value;$('foods').innerHTML=s.foods.filter(f=>(f.name+' '+f.brand).toLowerCase().includes(dbq)&&(!cat||f.category===cat)).map(f=>`<tr><td><b>${esc(f.name)}</b><div class="tiny">${esc(f.brand)} · ${f.category}</div></td><td>${f.amount} ${f.unit}</td><td class="right">${fmt(f.kcal)}</td><td class="right">${fmt(f.protein)} g</td><td class="right"><button class="secondary" data-ed="${f.id}">Edit</button> <button class="danger" data-del="${f.id}">Del</button></td></tr>`).join('');
 $('foods').querySelectorAll('[data-ed]').forEach(b=>b.onclick=()=>edit(b.dataset.ed));$('foods').querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{if(confirm('Delete this food?')){s.foods=s.foods.filter(f=>f.id!==b.dataset.del);persist()}});
-let dates=Object.keys(s.logs).sort().reverse().filter(d=>s.logs[d].length).slice(0,7);$('history').innerHTML=dates.map(d=>{let a=sum(s.logs[d]);return `<tr><td>${d}</td><td class="right">${fmt(a.kcal)}</td><td class="right">${fmt(a.protein)} g</td><td class="right">${fmt(a.carbs)} g</td><td class="right">${fmt(a.fat)} g</td></tr>`}).join('')||'<tr><td colspan="5">No logged days yet</td></tr>';drawWeeklyChart('calChart','kcal',tc,'kcal','#258653',$('date').value);drawWeeklyChart('proChart','protein',tp,'g','#287f9d',$('date').value)}
+let dates=Object.keys(s.logs).sort().reverse().filter(d=>s.logs[d].length).slice(0,7);$('history').innerHTML=dates.map(d=>{let a=sum(s.logs[d]);return `<tr><td>${d}</td><td class="right">${fmt(a.kcal)}</td><td class="right">${fmt(a.protein)} g</td><td class="right">${fmt(a.carbs)} g</td><td class="right">${fmt(a.fat)} g</td><td class="hact"><button class="secondary" type="button" data-hview="${d}">View</button><button class="danger" type="button" data-hdel="${d}" aria-label="Delete ${d}">Delete</button></td></tr>`}).join('')||'<tr><td colspan="6">No logged days yet</td></tr>';drawWeeklyChart('calChart','kcal',tc,'kcal','#258653',$('date').value);drawWeeklyChart('proChart','protein',tp,'g','#287f9d',$('date').value)}
 $('add').onclick=()=>{let id=$('food').value,qty=num($('qty').value);if(!id||qty<=0)return;(s.logs[$('date').value]??=[]).push({id,qty,meal:$('meal').value});$('qty').value=1;persist()};$('date').onchange=render;$('search').oninput=render;$('dbsearch').oninput=render;$('dbcat').onchange=render;
 function clear(){$('ocrStatus').textContent='';['name','brand','kcal','protein','carbs','fat'].forEach(x=>$(x).value='');$('amount').value=100;$('unit').value='g';$('category').value='Other'}
 function edit(id){let f=s.foods.find(x=>x.id===id);if(!f)return;editId=id;pendingBarcode=null;$('ocrStatus').textContent='';$('editTitle').textContent='Edit food';for(let k of ['name','brand','category','amount','unit','kcal','protein','carbs','fat'])$(k).value=f[k];$('editor').classList.remove('hidden')}
@@ -1241,6 +1244,25 @@ function scShowResult(f){
 // After saving a food created from a scan, come straight back to the "add to log" sheet.
 {const o=$('save').onclick;$('save').onclick=()=>{const code=!editId&&pendingBarcode;o();
   if(code&&$('editor').classList.contains('hidden')){const f=s.foods.find(x=>x.barcode===code);if(f){showTab('today',false);openOverlay();scSetMode('barcode');$('scFreeze').classList.add('hidden');$('scView').classList.add('nocam');scShowResult(f)}}}}
+
+// ---- History table: view or delete a whole day ----
+function toastAction(msg,label,fn){
+  const t=$('toast');t.innerHTML='';t.append(msg+' ');
+  const b=document.createElement('button');b.type='button';b.className='toastbtn';b.textContent=label;b.onclick=()=>{t.classList.remove('show','actionable');fn()};t.append(b);
+  t.classList.add('show','actionable');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('show','actionable'),6000);
+}
+function deleteDay(d){
+  const items=s.logs[d]||[];if(!items.length)return;
+  const t=sum(items);
+  if(!confirm(`Delete all ${items.length} food entr${items.length>1?'ies':'y'} logged on ${d} (${Math.round(t.kcal)} kcal)?`+(s.weights&&s.weights[d]?'\n\nThe body weight for this day is kept.':'')))return;
+  const removed=items.slice();delete s.logs[d];persist();
+  toastAction(`🗑️ Deleted ${d}`,'Undo',()=>{s.logs[d]=[...(s.logs[d]||[]),...removed];persist();toast('↩️ Restored '+d)});
+}
+function wireHistory(){
+  $('history').querySelectorAll('[data-hview]').forEach(b=>b.onclick=()=>{$('date').value=b.dataset.hview;render();showTab('today')});
+  $('history').querySelectorAll('[data-hdel]').forEach(b=>b.onclick=()=>deleteDay(b.dataset.hdel));
+}
+{const base=render;render=function(){base();wireHistory()}}
 
 $('targetCal').value=s.targets.calories||1500;$('targetPro').value=s.targets.protein||100;render();
 </script></body></html>
