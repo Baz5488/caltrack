@@ -609,7 +609,10 @@ function csvToFoods(text){
 $('importCsv').onchange=async e=>{
   const file=e.target.files[0];e.target.value='';if(!file)return;
   try{
-    const {foods,skipped}=csvToFoods(await file.text());
+    // Excel on Japanese Windows saves CSV as Shift-JIS: fall back to it when the file is not valid UTF-8.
+    const buf=await file.arrayBuffer();let text;
+    try{text=new TextDecoder('utf-8',{fatal:true}).decode(buf)}catch(e){try{text=new TextDecoder('shift_jis').decode(buf)}catch(e2){text=new TextDecoder().decode(buf)}}
+    const {foods,skipped}=csvToFoods(text);
     if(!foods.length){alert('No foods could be imported.'+(skipped.length?'\n\nSkipped:\n'+skipped.join('\n'):''));return}
     const key=f=>(f.name+'|'+f.brand).toLowerCase();
     const existing=new Map(s.foods.map(f=>[key(f),f]));
